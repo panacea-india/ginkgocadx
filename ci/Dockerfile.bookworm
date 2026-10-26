@@ -63,6 +63,7 @@ RUN apt-get update \
       libwrap0-dev \
       libwxgtk3.2-dev \
       libxml2-dev \
+      librsvg2-common \
       locales \
  && sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale.gen \
  && locale-gen \

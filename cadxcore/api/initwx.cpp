@@ -225,11 +225,15 @@ IMPLEMENT_APP_NO_MAIN(Ginkgo)
 int WINAPI InitWX(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
         SetProcessDefaultLayout(0);
+        // wx 3.2 keeps asserts on even with NDEBUG; release builds must not stop on them
+        wxDISABLE_ASSERTS_IN_RELEASE_BUILD();
         return wxEntry(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
 }
 #else
 int InitWX(int argc, char** argv)
 {
+        // wx 3.2 keeps asserts on even with NDEBUG; release builds must not stop on them
+        wxDISABLE_ASSERTS_IN_RELEASE_BUILD();
         return wxEntry(argc, argv);
 }
 #endif
