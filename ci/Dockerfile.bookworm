@@ -72,8 +72,11 @@ RUN apt-get update \
 RUN echo /opt/vtk6/lib > /etc/ld.so.conf.d/vtk6.conf && ldconfig
 
 # Where the source-built VTK keeps its CMake package files; ci/build.sh passes
-# this on to CMake through CMAKE_ARGS.
+# it on to CMake as -DVTK_DIR.
 ENV VTK_DIR=/opt/vtk6/lib/cmake/vtk-6.3
 ENV LANG=en_US.UTF-8
+# No D-Bus session in the container; keep GTK settings in memory instead of
+# printing a dconf warning for every change.
+ENV GSETTINGS_BACKEND=memory
 
 WORKDIR /src

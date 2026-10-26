@@ -131,7 +131,8 @@ the buster image; `phase0-buildable` stays as the old-stack baseline.
 - [x] C++ clean-ups: `throw()` to `noexcept`, `OFauto_ptr` to
       `OFunique_ptr`, `register`, bounded `snprintf`/`strlcpy`, `tempnam` to
       `mkstemp`
-- [ ] Open a DICOM file and exercise the main tools on this build
+- [x] Open a DICOM file and exercise the main tools on this build (image
+      display, zoom, pan, measurement tools)
 
 Findings:
 
@@ -144,6 +145,14 @@ Findings:
 - Debian's DCMTK doesn't ship `libi2d`, so the copied version stays.
 - Building VTK and Ginkgo with all cores can exhaust memory; use `JOBS=4`
   (`docker run -e JOBS=4 ...`).
+
+Open issues:
+
+- The application once exited (code 1) after the log level was set to Debug
+  and the logs were copied from the log window. The log from that session was
+  cut off, so the cause is unknown; it hasn't been reproduced.
+- Containers have no D-Bus session, so GTK prints dconf warnings unless
+  `GSETTINGS_BACKEND=memory` is set (the bookworm image sets it).
 
 To build and run:
 
