@@ -72,7 +72,8 @@ Build on the old stack in Docker so contributors have something that compiles.
 - [x] `ci/build.sh`: configure and build with Debian's packaging flags
 - [x] Verify the image and a full build on x86_64 (builds cleanly; the only
       linker warning is `tempnam` in `incomingdicomassociationcommand.cpp`)
-- [ ] GitHub Actions workflow that builds the image and runs `ci/build.sh`
+- [x] GitHub Actions workflow that builds the image and runs `ci/build.sh`
+      (Release and Debug; untested until first push)
 - [ ] Remove `.travis.yml` and `model_ginkgo.cpp`
 - [ ] Raise `cmake_minimum_required` in all four `CMakeLists.txt` files
 - [ ] Rewrite the README so building starts from this repo
