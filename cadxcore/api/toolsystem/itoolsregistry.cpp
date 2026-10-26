@@ -21,7 +21,7 @@
 #include "itoolsregistry.h"
 #include <main/toolsystem/toolsregistry.h>
 
-GNC::GCS::ToolsRegistryException::ToolsRegistryException(const std::string& msg) throw() : GNC::GCS::IException(msg, "GNC", false)
+GNC::GCS::ToolsRegistryException::ToolsRegistryException(const std::string& msg) noexcept : GNC::GCS::IException(msg, "GNC", false)
 {
 }
 

@@ -22,14 +22,14 @@
 #include <api/iexception.h>
 #include <api/internationalization/internationalization.h>
 
-GNC::GCS::IException::IException(const std::string& msg, const std::string& component, bool fatal) throw()
+GNC::GCS::IException::IException(const std::string& msg, const std::string& component, bool fatal) noexcept
 {
         this->cause = msg;
         this->component = component;
         this->fatal = fatal;
 }
 
-GNC::GCS::IException::~IException() throw()
+GNC::GCS::IException::~IException() noexcept
 {
 }
 
@@ -43,7 +43,7 @@ const std::string& GNC::GCS::IException::GetCause() const
         return cause;
 }
 
-const char* GNC::GCS::IException::what() const throw()
+const char* GNC::GCS::IException::what() const noexcept
 {
         return cause.c_str();
 }
@@ -65,12 +65,12 @@ GNC::GCS::IException::operator std::string() const
 
 //=========================
 
-GNC::GCS::IRequestingException::IRequestingException(const std::string& msg, const std::string& component, bool fatal) throw() : IException(msg, component, fatal)
+GNC::GCS::IRequestingException::IRequestingException(const std::string& msg, const std::string& component, bool fatal) noexcept : IException(msg, component, fatal)
 {
 
 }
 
-GNC::GCS::IRequestingException::~IRequestingException() throw()
+GNC::GCS::IRequestingException::~IRequestingException() noexcept
 {
 
 }

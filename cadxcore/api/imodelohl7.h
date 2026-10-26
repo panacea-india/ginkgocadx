@@ -43,13 +43,13 @@ std::string DefaultEscapeER7(const std::string& str);
 class HL7Exception : public GNC::GCS::IException
 {
 public:
-        HL7Exception(const std::string& msg, const std::string& component="HL7", bool fatal = true) throw() : GNC::GCS::IException(msg ,component, fatal) {}
+        HL7Exception(const std::string& msg, const std::string& component="HL7", bool fatal = true) noexcept : GNC::GCS::IException(msg ,component, fatal) {}
 };
 
 class HL7XMLException : public GNC::GCS::IException
 {
 public:
-        HL7XMLException(const std::string& msg, const std::string& component="XMLIntegration", bool fatal = true) throw() : GNC::GCS::IException(msg ,component, fatal) {}
+        HL7XMLException(const std::string& msg, const std::string& component="XMLIntegration", bool fatal = true) noexcept : GNC::GCS::IException(msg ,component, fatal) {}
 };
 
 namespace Util

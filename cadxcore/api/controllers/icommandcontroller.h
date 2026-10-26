@@ -35,7 +35,7 @@ namespace GCS
 class EXTAPI CommandControllerException : public GNC::GCS::IException
 {
 public:
-        CommandControllerException(const std::string& msg, const std::string& componente = "Model", bool fatal = true) throw();
+        CommandControllerException(const std::string& msg, const std::string& componente = "Model", bool fatal = true) noexcept;
 };
 
 

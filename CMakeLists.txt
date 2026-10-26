@@ -7,7 +7,6 @@ SET( GINKGO_VERSION 3.8.8)
 SET( USE_PATCHED_LIBS        FALSE CACHE BOOL "Use patched libraries")
 SET( BUILD_VISUALIZATION_EXT TRUE CACHE BOOL "Build Visualization extention")
 
-SET( USE_SYSTEM_SQLITE       TRUE CACHE BOOL "Build with system SQLite library")
 SET( USE_CUSTOM_WX           FALSE CACHE BOOL "Build with custom WX library")
 SET( USE_CUSTOM_VTK          FALSE CACHE BOOL "Build with custom VTK library")
 SET( USE_CUSTOM_ITK          FALSE CACHE BOOL "Build with custom ITK library")
@@ -17,7 +16,6 @@ SET( CUSTOM_PACKAGE          FALSE CACHE BOOL "Custom package")
 SET( FORCE_SSE               FALSE CACHE BOOL "Force SSE Flag")
 SET( INTERNET_DIST           TRUE CACHE BOOL "Public distribution")
 
-SET( CMAKE_OSX_ARCHITECTURES "i386" CACHE STRING "MacOSX Architectures" FORCE)
 
 SET( GINKGO_VERSION_STR ${GINKGO_VERSION})
 
@@ -120,13 +118,6 @@ ENDIF()
 
 
 
-IF(NOT USE_SYSTEM_SQLITE)
-MESSAGE(STATUS "Using builtin SQLite")
-ELSE()
-MESSAGE(STATUS "Using system SQLite")
-#FIND_PACKAGE(sqlite REQUIRED)
-
-ENDIF()
 
 
 # require cairo includes

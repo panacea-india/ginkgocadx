@@ -10,11 +10,12 @@ the GNU Lesser General Public License v3.
 
 ## Status
 
-The code needs an old dependency stack (VTK 6, ITK 4, wxWidgets 3.0, DCMTK
-3.6.4) that current Linux distributions no longer ship. Until it is ported, the
-supported way to build it is the Debian 10 (buster) container in `ci/`. See
-[docs/modernization-plan.md](docs/modernization-plan.md) for the plan to move
-to current libraries.
+The code builds against Debian 12 (bookworm) libraries: wxWidgets 3.2, ITK 5,
+DCMTK 3.6.7 and OpenSSL 3. Its drawing code still needs VTK's legacy OpenGL
+backend, which current distributions no longer ship, so the build container in
+`ci/` compiles VTK 6.3 from source. See
+[docs/modernization-plan.md](docs/modernization-plan.md) for the plan, including
+the port to VTK 9.
 
 Changes in this branch on top of Ginkgo CADx 3.8.8:
 
@@ -25,16 +26,20 @@ Changes in this branch on top of Ginkgo CADx 3.8.8:
 
 ## Build
 
-You need Docker on an x86_64 machine. The build image is amd64 only because
-buster's ITK 4 package is not built for other architectures.
+You need Docker on an x86_64 machine. Building the image compiles VTK 6.3, which
+takes a while the first time; Docker caches it afterwards.
 
 ```
-docker build -t ginkgocadx-build -f ci/Dockerfile ci
-docker run --rm -v "$PWD":/src ginkgocadx-build ci/build.sh
+docker build -t ginkgocadx-build-bookworm -f ci/Dockerfile.bookworm ci
+docker run --rm -e JOBS=4 -v "$PWD":/src ginkgocadx-build-bookworm ci/build.sh
 ```
 
 The binary ends up at `build/ginkgocadx/ginkgocadx`. `ci/build.sh` takes an
-optional build type (`Release` or `Debug`) and build directory.
+optional build type (`Release` or `Debug`) and build directory. `JOBS` limits
+parallel compile jobs; with all cores the build can run out of memory.
+
+`ci/Dockerfile` is the older Debian 10 (buster) environment for the original
+3.8.8 code, kept on the `phase0-buildable` branch.
 
 On Windows, use a checkout where shell scripts keep LF line endings (the
 included `.gitattributes` takes care of this).
@@ -48,16 +53,16 @@ use WSLg:
 ```
 docker run --rm -v "$PWD":/src \
   -v /run/desktop/mnt/host/wslg/.X11-unix:/tmp/.X11-unix -e DISPLAY=:0 \
-  ginkgocadx-build ci/run.sh
+  ginkgocadx-build-bookworm ci/run.sh
 ```
 
 On a Linux desktop, mount `/tmp/.X11-unix` and pass your own `DISPLAY`.
 
 ## Building without Docker
 
-On Debian 10 the build dependencies are listed in `ci/Dockerfile`. Run
-`ci/build.sh` from the repository root. Newer distributions don't package the
-required VTK, ITK and wxWidgets versions.
+On Debian 12 the build dependencies are listed in `ci/Dockerfile.bookworm`.
+Install them, build VTK 6.3 as the Dockerfile does, then run
+`VTK_DIR=<vtk-prefix>/lib/cmake/vtk-6.3 ci/build.sh` from the repository root.
 
 ## AppImage
 

@@ -25,6 +25,10 @@
 #define DCMTK_LOG4CPLUS_TRACELOGGER_H
 #define DCMTK_LOG4CPLUS_LOGGING_MACROS_HEADER_
 
+#include <cstdlib>
+#include <string>
+#include <vector>
+#include <unistd.h>
 #include <wx/string.h>
 
 #include <api/imodelointegracion.h>
@@ -289,7 +293,7 @@ void GADAPI::PACS::IncomingDicomAssociationCommand::Execute()
                                         rsp.CommandField = DIMSE_C_GET_RSP;
                                         rsp.msg.CGetRSP.DimseStatus = STATUS_GET_Failed_SOPClassNotSupported;
                                         rsp.msg.CGetRSP.MessageIDBeingRespondedTo = msg.msg.CGetRQ.MessageID;
-                                        strcpy(rsp.msg.CGetRSP.AffectedSOPClassUID, msg.msg.CGetRQ.AffectedSOPClassUID);
+                                        OFStandard::strlcpy(rsp.msg.CGetRSP.AffectedSOPClassUID, msg.msg.CGetRQ.AffectedSOPClassUID, sizeof(rsp.msg.CGetRSP.AffectedSOPClassUID));
                                         rsp.msg.CGetRSP.opts = O_GET_AFFECTEDSOPCLASSUID
                                                                | O_GET_NUMBEROFREMAININGSUBOPERATIONS
                                                                | O_GET_NUMBEROFCOMPLETEDSUBOPERATIONS
@@ -417,15 +421,20 @@ void GADAPI::PACS::IncomingDicomAssociationCommand::storeSCP( T_ASC_Association 
                 m_TempDir = GNC::Entorno::Instance()->CreateGinkgoTempFile();
         }
 
-        // GW: still not secure, but no longer a resource leak, see also #16
-        // since right now I don't know how to properly work around this, I'll just tag the code.
-        // coverity[SECURE_TEMP]
-        char *fileName = tempnam(m_TempDir.c_str(), "sscpfile_");
-        if (!fileName) {
+        // mkstemp creates the file atomically with a name nobody else can predict;
+        // DIMSE_storeProvider then reopens it by name and writes the dataset.
+        std::string fileTemplate = m_TempDir + "/sscpfile_XXXXXX";
+        std::vector<char> fileNameBuf(fileTemplate.begin(), fileTemplate.end());
+        fileNameBuf.push_back('\0');
+        int fd = mkstemp(fileNameBuf.data());
+        if (fd < 0) {
                 LOG_ERROR(ambitolog, "Unable to create unique file name:"<< strerror(errno));
                 *rcond = makeOFCondition(OFM_dcmnet, 20, OF_error, "IncomingDicomAssociationCommand::storeSCP: unable to create unique file name");
                 return;
         }
+
+        close(fd);
+        const char *fileName = fileNameBuf.data();
 
         // dump some information if required
         OFString str;
@@ -465,7 +474,6 @@ void GADAPI::PACS::IncomingDicomAssociationCommand::storeSCP( T_ASC_Association 
         } else {
                 m_DicomFileList.push_back(std::string(fileName));
         }
-        free(fileName);
         *rcond = cond;
 }
 

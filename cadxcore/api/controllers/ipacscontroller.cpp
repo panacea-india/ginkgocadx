@@ -31,7 +31,7 @@
 #define verify MACRO_QUE_ESTORBA
 #endif
 
-GIL::DICOM::PACSException::PACSException(const std::string& msg, const std::string& component, bool fatal) throw() : GNC::GCS::IException(msg, component, fatal)
+GIL::DICOM::PACSException::PACSException(const std::string& msg, const std::string& component, bool fatal) noexcept : GNC::GCS::IException(msg, component, fatal)
 {
 }
 

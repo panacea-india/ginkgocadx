@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    # The build image is amd64 only (see ci/Dockerfile).
+    # The build image is amd64 only (see ci/Dockerfile.bookworm).
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -21,13 +21,13 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ci
-          file: ci/Dockerfile
-          tags: ginkgocadx-build
+          file: ci/Dockerfile.bookworm
+          tags: ginkgocadx-build-bookworm
           load: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Build Ginkgo CADx
         run: |
-          docker run --rm -v "$PWD":/src ginkgocadx-build \
+          docker run --rm -e JOBS=4 -v "$PWD":/src ginkgocadx-build-bookworm \
             ci/build.sh ${{ matrix.build_type }}

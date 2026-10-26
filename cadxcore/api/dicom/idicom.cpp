@@ -301,10 +301,10 @@ template<class T> T GIL::DICOM::TipoMetaInfo::getTagAs(const std::string& tag, c
         return ret;
 }
 
-GIL::DICOM::I2DException::I2DException(const std::string& msg, const std::string& componente, bool fatal) throw()  : GNC::GCS::IException(msg, componente, fatal)
+GIL::DICOM::I2DException::I2DException(const std::string& msg, const std::string& componente, bool fatal) noexcept  : GNC::GCS::IException(msg, componente, fatal)
 {
 }
-GIL::DICOM::I2DException::~I2DException() throw()
+GIL::DICOM::I2DException::~I2DException() noexcept
 {
 }
 

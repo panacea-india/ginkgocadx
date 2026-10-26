@@ -94,9 +94,9 @@ class EXTAPI IExtensionException : public IException
 public:
 
 protected:
-        IExtensionException(const std::string& msg, const std::string& component="GNC", bool fatal = true) throw();
+        IExtensionException(const std::string& msg, const std::string& component="GNC", bool fatal = true) noexcept;
 
-        ~IExtensionException() throw();
+        ~IExtensionException() noexcept;
 };
 
 class EXTAPI IControladorExtensiones

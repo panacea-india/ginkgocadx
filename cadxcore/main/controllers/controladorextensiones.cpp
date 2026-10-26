@@ -273,8 +273,8 @@ private:
 
 
 
-GNC::GCS::IExtensionException::IExtensionException(const std::string& msg, const std::string& component, bool fatal) throw() : GNC::GCS::IException(msg, component, fatal) {}
-GNC::GCS::IExtensionException::~IExtensionException() throw() {}
+GNC::GCS::IExtensionException::IExtensionException(const std::string& msg, const std::string& component, bool fatal) noexcept : GNC::GCS::IException(msg, component, fatal) {}
+GNC::GCS::IExtensionException::~IExtensionException() noexcept {}
 
 
 GNC::GCS::IControladorExtensiones::IControladorExtensiones() {}

@@ -57,7 +57,7 @@ class ControladorCargaException : public GNC::GCS::IException
 public:
         ControladorCargaException(const std::string& msg, const std::string& componente="Modelo", bool fatal = true);
 
-        ~ControladorCargaException() throw();
+        ~ControladorCargaException() noexcept;
 protected:
 };
 

@@ -371,7 +371,7 @@ static OFCondition addStoragePresentationContexts(T_ASC_Parameters *params, OFLi
 static OFString intToString(int i)
 {
         char numbuf[32];
-        sprintf(numbuf, "%d", i);
+        snprintf(numbuf, sizeof(numbuf), "%d", i);
         return numbuf;
 }
 
@@ -738,8 +738,8 @@ static OFCondition storeSCU(T_ASC_Association * assoc, const char *fname)
         /* prepare the transmission of data */
         bzero((char*)&req, sizeof(req));
         req.MessageID = msgId;
-        strcpy(req.AffectedSOPClassUID, sopClass);
-        strcpy(req.AffectedSOPInstanceUID, sopInstance);
+        OFStandard::strlcpy(req.AffectedSOPClassUID, sopClass, sizeof(req.AffectedSOPClassUID));
+        OFStandard::strlcpy(req.AffectedSOPInstanceUID, sopInstance, sizeof(req.AffectedSOPInstanceUID));
         req.DataSetType = DIMSE_DATASET_PRESENT;
         req.Priority = DIMSE_PRIORITY_LOW;
 
@@ -1180,7 +1180,7 @@ void DicomStoreAssociation::Store(ListaRutas listaFicheros, const GNC::GCS::Ptr<
         /* Figure out the presentation addresses and copy the */
         /* corresponding values into the association parameters.*/
         gethostname(localHost, sizeof(localHost) - 1);
-        sprintf(peerHost, "%s:%d", opt_peer, (int)opt_port);
+        snprintf(peerHost, sizeof(peerHost), "%s:%d", opt_peer, (int)opt_port);
         //NSLog(@"peer host: %s", peerHost);
         cond = ASC_setPresentationAddresses(params, localHost, peerHost);
         if (cond.bad()) {

@@ -24,11 +24,11 @@
 
 //----------------------------------------------------------------------------------------------------
 
-GNC::GCS::NullPointerException::NullPointerException() throw() : GNC::GCS::IException(_Std("Attempted to dereference null pointer"))
+GNC::GCS::NullPointerException::NullPointerException() noexcept : GNC::GCS::IException(_Std("Attempted to dereference null pointer"))
 {
 }
 
-GNC::GCS::NullPointerException::~NullPointerException() throw()
+GNC::GCS::NullPointerException::~NullPointerException() noexcept
 {
 }
 

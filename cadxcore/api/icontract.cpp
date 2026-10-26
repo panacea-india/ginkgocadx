@@ -20,7 +20,7 @@
 
 #include "icontract.h"
 
-GNC::GCS::ContractException::ContractException(const std::string& msg) throw() : GNC::GCS::IException(msg, "GNC", false)
+GNC::GCS::ContractException::ContractException(const std::string& msg) noexcept : GNC::GCS::IException(msg, "GNC", false)
 {
 }
 

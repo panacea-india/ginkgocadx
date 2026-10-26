@@ -34,15 +34,15 @@ namespace GCS
 class EXTAPI IException : public std::exception
 {
 public:
-        IException(const std::string& msg, const std::string& component="GNC", bool fatal = true) throw();
+        IException(const std::string& msg, const std::string& component="GNC", bool fatal = true) noexcept;
 
-        virtual ~IException() throw();
+        virtual ~IException() noexcept;
 
         const std::string& GetComponent() const;
 
         const std::string& GetCause() const;
 
-        virtual const char* what() const throw();
+        virtual const char* what() const noexcept;
 
         std::string GetFullCause() const;
 
@@ -64,8 +64,8 @@ protected:
 class EXTAPI IRequestingException : public IException
 {
 public:
-        IRequestingException(const std::string& msg, const std::string& component="GNC", bool fatal = true) throw();
-        virtual ~IRequestingException() throw();
+        IRequestingException(const std::string& msg, const std::string& component="GNC", bool fatal = true) noexcept;
+        virtual ~IRequestingException() noexcept;
 
         virtual bool shouldExit() = 0;
 };

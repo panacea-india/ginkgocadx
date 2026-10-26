@@ -22,7 +22,7 @@
 #include "icontroladorpermisos.h"
 #include <main/controllers/controladorpermisos.h>
 
-GNC::GCS::ControladorPermisosException::ControladorPermisosException(const std::string& msg, bool fatal) throw() : GNC::GCS::IException(msg, "GNC", fatal)
+GNC::GCS::ControladorPermisosException::ControladorPermisosException(const std::string& msg, bool fatal) noexcept : GNC::GCS::IException(msg, "GNC", fatal)
 {
 }
 

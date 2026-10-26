@@ -72,8 +72,8 @@ namespace GCS
 class EXTAPI NullPointerException : public GNC::GCS::IException
 {
 public:
-        NullPointerException() throw();
-        ~NullPointerException() throw();
+        NullPointerException() noexcept;
+        ~NullPointerException() noexcept;
 };
 
 

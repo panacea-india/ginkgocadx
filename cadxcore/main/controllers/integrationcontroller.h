@@ -39,7 +39,7 @@ namespace GIL
 class EXTAPI IntegrationException : public GNC::GCS::IException
 {
 public:
-        IntegrationException(const std::string& msg, const std::string& component="Modelo", bool fatal = true) throw() : GNC::GCS::IException(msg, component, fatal) {}
+        IntegrationException(const std::string& msg, const std::string& component="Modelo", bool fatal = true) noexcept : GNC::GCS::IException(msg, component, fatal) {}
 };
 
 class EXTAPI IXMLIntegrationParser

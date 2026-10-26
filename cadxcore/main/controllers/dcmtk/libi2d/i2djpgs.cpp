@@ -290,13 +290,13 @@ OFCondition I2DJpegSource::getSOFImageParameters( const JPEGFileMapEntry& entry,
         if (m_debug) {
                 char buf[100];
                 printMessage(m_logStream, "I2DJpegSource: JPEG SOF image parameters:");
-                sprintf(buf, "%u", image_width);
+                snprintf(buf, sizeof(buf), "%u", image_width);
                 printMessage(m_logStream, "I2DJpegSource:   Image Width: ", buf);
-                sprintf(buf, "%u", image_height);
+                snprintf(buf, sizeof(buf), "%u", image_height);
                 printMessage(m_logStream, "I2DJpegSource:   Image Height: ", buf);
-                sprintf(buf, "%u", num_components);
+                snprintf(buf, sizeof(buf), "%u", num_components);
                 printMessage(m_logStream, "I2DJpegSource:   Number of Components: ", buf);
-                sprintf(buf, "%u", data_precision);
+                snprintf(buf, sizeof(buf), "%u", data_precision);
                 printMessage(m_logStream, "I2DJpegSource:   Data Precision: ", buf);
         }
 
@@ -373,13 +373,13 @@ OFCondition I2DJpegSource::getJFIFImageParameters( const JPEGFileMapEntry& entry
         if (m_debug) {
                 char buf[100];
                 printMessage(m_logStream, "I2DJpegSource: JPEG JFIF image parameters:", buf);
-                sprintf(buf, "%u", jfifVersion);
+                snprintf(buf, sizeof(buf), "%u", jfifVersion);
                 printMessage(m_logStream, "I2DJpegSource:   JFIF version: ", buf);
-                sprintf(buf, "%u", pixelAspectH);
+                snprintf(buf, sizeof(buf), "%u", pixelAspectH);
                 printMessage(m_logStream, "I2DJpegSource:   Horizontal Pixel Aspect Ratio ", buf);
-                sprintf(buf, "%u", pixelAspectV);
+                snprintf(buf, sizeof(buf), "%u", pixelAspectV);
                 printMessage(m_logStream, "I2DJpegSource:   Vertical Pixel Aspect Ratio: ", buf);
-                sprintf(buf, "%u", unit);
+                snprintf(buf, sizeof(buf), "%u", unit);
                 printMessage(m_logStream, "I2DJpegSource:   Units: ", buf);
         }
 
@@ -696,7 +696,7 @@ OFString I2DJpegSource::jpegMarkerToString(const E_JPGMARKER& marker)
         }
         OFString msg = "UNKNOWN MARKER :";
         char hexNo[10];
-        sprintf(hexNo,"%x2", marker);
+        snprintf(hexNo, sizeof(hexNo), "%x2", marker);
         msg += hexNo;
         return msg;
 }

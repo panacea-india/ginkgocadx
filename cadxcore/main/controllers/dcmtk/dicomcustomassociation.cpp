@@ -313,7 +313,7 @@ OFCondition CustomAssociation::sendNRequest(
                         /* No N-EVENT-REPORT-RQ. Check if this message is what we expected */
                         if (response.CommandField != expectedResponse) {
                                 char buf1[256];
-                                sprintf(buf1, "DIMSE: Unexpected Response Command Field: 0x%x", (unsigned)response.CommandField);
+                                snprintf(buf1, sizeof(buf1), "DIMSE: Unexpected Response Command Field: 0x%x", (unsigned)response.CommandField);
                                 return makeDcmnetCondition(DIMSEC_UNEXPECTEDRESPONSE, OF_error, buf1);
                         }
                         T_DIMSE_DataSetType responseDataset = DIMSE_DATASET_NULL;
@@ -342,14 +342,14 @@ OFCondition CustomAssociation::sendNRequest(
                                 break;
                         default: {
                                 char buf1[256];
-                                sprintf(buf1, "DIMSE: Unexpected Response Command Field: 0x%x", (unsigned)response.CommandField);
+                                snprintf(buf1, sizeof(buf1), "DIMSE: Unexpected Response Command Field: 0x%x", (unsigned)response.CommandField);
                                 return makeDcmnetCondition(DIMSEC_UNEXPECTEDRESPONSE, OF_error, buf1);
                         }
                                 /* break; */
                         }
                         if (responseMessageID != expectedMessageID) {
                                 char buf1[256];
-                                sprintf(buf1, "DIMSE: Unexpected Response Command Field: 0x%x", (unsigned)response.CommandField);
+                                snprintf(buf1, sizeof(buf1), "DIMSE: Unexpected Response Command Field: 0x%x", (unsigned)response.CommandField);
                                 return makeDcmnetCondition(DIMSEC_UNEXPECTEDRESPONSE, OF_error, buf1);
                         }
                         rspDataset = NULL;
@@ -497,8 +497,8 @@ DcmDataset* &attributeListOut)
         // construct N-GET-RQ
         request.CommandField = DIMSE_N_GET_RQ;
         request.msg.NGetRQ.MessageID = assoc->nextMsgID++;
-        strcpy(request.msg.NGetRQ.RequestedSOPClassUID, sopclassUID);
-        strcpy(request.msg.NGetRQ.RequestedSOPInstanceUID, sopinstanceUID);
+        OFStandard::strlcpy(request.msg.NGetRQ.RequestedSOPClassUID, sopclassUID, sizeof(request.msg.NGetRQ.RequestedSOPClassUID));
+        OFStandard::strlcpy(request.msg.NGetRQ.RequestedSOPInstanceUID, sopinstanceUID, sizeof(request.msg.NGetRQ.RequestedSOPInstanceUID));
         request.msg.NGetRQ.ListCount = 0;
         if (attributeIdentifierList) request.msg.NGetRQ.ListCount = (int)numShorts;
         request.msg.NGetRQ.AttributeIdentifierList = (DIC_US *)attributeIdentifierList;
@@ -552,8 +552,8 @@ DcmDataset* &actionReply)
         // construct N-ACTION-RQ
         request.CommandField = DIMSE_N_ACTION_RQ;
         request.msg.NActionRQ.MessageID = assoc->nextMsgID++;
-        strcpy(request.msg.NActionRQ.RequestedSOPClassUID, sopclassUID);
-        strcpy(request.msg.NActionRQ.RequestedSOPInstanceUID, sopinstanceUID);
+        OFStandard::strlcpy(request.msg.NActionRQ.RequestedSOPClassUID, sopclassUID, sizeof(request.msg.NActionRQ.RequestedSOPClassUID));
+        OFStandard::strlcpy(request.msg.NActionRQ.RequestedSOPInstanceUID, sopinstanceUID, sizeof(request.msg.NActionRQ.RequestedSOPInstanceUID));
         request.msg.NActionRQ.ActionTypeID = (DIC_US)actionTypeID;
         ////////TODO: ESTÁ FALLANDO
         OFCondition cond = sendNRequest(presCtx, request, actionInformation, response, statusDetail, actionReply);
@@ -603,8 +603,8 @@ Uint16& status)
         // construct N-DELETE-RQ
         request.CommandField = DIMSE_N_DELETE_RQ;
         request.msg.NDeleteRQ.MessageID = assoc->nextMsgID++;
-        strcpy(request.msg.NDeleteRQ.RequestedSOPClassUID, sopclassUID);
-        strcpy(request.msg.NDeleteRQ.RequestedSOPInstanceUID, sopinstanceUID);
+        OFStandard::strlcpy(request.msg.NDeleteRQ.RequestedSOPClassUID, sopclassUID, sizeof(request.msg.NDeleteRQ.RequestedSOPClassUID));
+        OFStandard::strlcpy(request.msg.NDeleteRQ.RequestedSOPInstanceUID, sopinstanceUID, sizeof(request.msg.NDeleteRQ.RequestedSOPInstanceUID));
 
         OFCondition cond = sendNRequest(presCtx, request, NULL, response, statusDetail, attributeListOut);
         if (cond.good()) status = response.msg.NDeleteRSP.DimseStatus;

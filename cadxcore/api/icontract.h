@@ -35,7 +35,7 @@ class EXTAPI ContractException : public GNC::GCS::IException
 {
 public:
 
-        ContractException(const std::string& msg) throw();
+        ContractException(const std::string& msg) noexcept;
 };
 
 //------------------------------------------------------------------------

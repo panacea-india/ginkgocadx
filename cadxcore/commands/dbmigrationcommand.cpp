@@ -37,7 +37,7 @@
 #include <wx/msgdlg.h>
 #include <wx/thread.h>
 #include <wx/wxsqlite3/wxsqlite3.h>
-#include <sqlite/sqlite3.h>
+#include <sqlite3.h>
 
 #define IDC_MIGRATION 120
 

@@ -391,7 +391,7 @@ void DICOMImg2DCM::Inicializar(D2DSource* plugEntrada, IInspectCallBack* pICallb
 
                         DcmTagKey tagkey = (*iter)->getKey();
                         //std::cout << "Checking " << keyStr << std::endl;
-                        if (sprintf(keyFormat, "%04X|%04X", tagkey.getGroup(), tagkey.getElement()) > 8) {
+                        if (snprintf(keyFormat, sizeof(keyFormat), "%04X|%04X", tagkey.getGroup(), tagkey.getElement()) > 8) {
                                 //std::cout << "Asigning " << keyFormat << std::endl;
                                 keyStr.assign(keyFormat);
                                 descStr = (*iter)->getTagName();
@@ -695,7 +695,7 @@ bool DICOMImg2DCM::Convertir(std::string& outputFile)
 
                         DcmTagKey tagkey = (*iter)->getKey();
                         //std::cout << "Checking " << keyStr << std::endl;
-                        if (sprintf(keyFormat, "%04X|%04X", tagkey.getGroup(), tagkey.getElement()) > 8) {
+                        if (snprintf(keyFormat, sizeof(keyFormat), "%04X|%04X", tagkey.getGroup(), tagkey.getElement()) > 8) {
                                 //std::cout << "Asigning " << keyFormat << std::endl;
                                 keyStr.assign(keyFormat);
                                 descStr = (*iter)->getTagName();

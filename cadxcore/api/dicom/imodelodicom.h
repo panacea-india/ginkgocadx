@@ -46,7 +46,7 @@ public:
                 this->component = componente;
                 this->fatal = fatal;
         }
-        ~ModelException() throw()
+        ~ModelException() noexcept
         {
         }
 

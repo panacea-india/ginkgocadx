@@ -42,11 +42,7 @@
 #else
 #define SQLITE_HAS_CODEC 0
 #endif
-#if defined(USE_SYSTEM_SQLITE)
 #include <sqlite3.h>
-#else
-#include "sqlite/sqlite3.h"
-#endif
 // Dynamic loading of the SQLite library
 #include <api/controllers/icontroladorlog.h>
 

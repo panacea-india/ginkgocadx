@@ -25,7 +25,7 @@ GNC::GCS::ControladorCargaException::ControladorCargaException(const std::string
 {
 }
 
-GNC::GCS::ControladorCargaException::~ControladorCargaException() throw()
+GNC::GCS::ControladorCargaException::~ControladorCargaException() noexcept
 {
 }
 

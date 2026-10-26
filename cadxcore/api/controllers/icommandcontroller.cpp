@@ -22,7 +22,7 @@
 #include "icommandcontroller.h"
 #include <main/controllers/commandcontroller.h>
 
-GNC::GCS::CommandControllerException::CommandControllerException(const std::string& msg, const std::string& componente, bool fatal) throw() : GNC::GCS::IException(msg, componente, fatal)
+GNC::GCS::CommandControllerException::CommandControllerException(const std::string& msg, const std::string& componente, bool fatal) noexcept : GNC::GCS::IException(msg, componente, fatal)
 {
 }
 

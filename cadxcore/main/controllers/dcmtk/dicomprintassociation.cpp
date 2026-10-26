@@ -774,7 +774,7 @@ OFCondition PrintAssociation::sendNRequest(
                         /* No N-EVENT-REPORT-RQ. Check if this message is what we expected */
                         if (response.CommandField != expectedResponse) {
                                 char buf1[256];
-                                sprintf(buf1, "DIMSE: Unexpected Response Command Field: 0x%x", (unsigned)response.CommandField);
+                                snprintf(buf1, sizeof(buf1), "DIMSE: Unexpected Response Command Field: 0x%x", (unsigned)response.CommandField);
                                 return makeDcmnetCondition(DIMSEC_UNEXPECTEDRESPONSE, OF_error, buf1);
                         }
                         T_DIMSE_DataSetType responseDataset = DIMSE_DATASET_NULL;
@@ -803,14 +803,14 @@ OFCondition PrintAssociation::sendNRequest(
                                 break;
                         default: {
                                 char buf1[256];
-                                sprintf(buf1, "DIMSE: Unexpected Response Command Field: 0x%x", (unsigned)response.CommandField);
+                                snprintf(buf1, sizeof(buf1), "DIMSE: Unexpected Response Command Field: 0x%x", (unsigned)response.CommandField);
                                 return makeDcmnetCondition(DIMSEC_UNEXPECTEDRESPONSE, OF_error, buf1);
                         }
                                 /* break; */
                         }
                         if (responseMessageID != expectedMessageID) {
                                 char buf1[256];
-                                sprintf(buf1, "DIMSE: Unexpected Response Command Field: 0x%x", (unsigned)response.CommandField);
+                                snprintf(buf1, sizeof(buf1), "DIMSE: Unexpected Response Command Field: 0x%x", (unsigned)response.CommandField);
                                 return makeDcmnetCondition(DIMSEC_UNEXPECTEDRESPONSE, OF_error, buf1);
                         }
                         rspDataset = NULL;

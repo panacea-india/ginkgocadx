@@ -35,13 +35,6 @@
 
 #define LOGGER_DEFECTO "default"
 
-#if PACKAGE_VERSION_NUMBER >= 362
-#define OFauto_ptr OFunique_ptr
-#ifndef HAVE_CXX11
-#error DCMTK must be compiled with CXX11 support
-#endif
-
-#endif
 
 namespace GNC
 {
@@ -67,7 +60,7 @@ GNC::ControladorLog::ControladorLog()
                 log4cplus::PropertyConfigurator::doConfigure(L4C_LITERAL("ginkgo.properties"));
                 log4cplus::SharedAppenderPtr append_0(gnkLog4cplus::GUIAppender::Instance());
                 append_0->setName(L4C_LITERAL("AppenderGUI"));
-                append_0->setLayout( OFauto_ptr<log4cplus::Layout>(new log4cplus::TTCCLayout()) );
+                append_0->setLayout( OFunique_ptr<log4cplus::Layout>(new log4cplus::TTCCLayout()) );
                 log4cplus::Logger::getRoot().addAppender(append_0);
 
         } else {
@@ -83,13 +76,13 @@ GNC::ControladorLog::ControladorLog()
                 ostr << "GinkgoLog.log";
                 log4cplus::SharedAppenderPtr append_0(gnkLog4cplus::GUIAppender::Instance());
                 append_0->setName(DCMTK_LOG4CPLUS_TEXT("AppenderGUI"));
-                append_0->setLayout( OFauto_ptr<log4cplus::Layout>(new log4cplus::PatternLayout("%D{%Y/%m/%d %H:%M:%S.%q} [%t] %-5p %c %x - %m%n")) );
+                append_0->setLayout( OFunique_ptr<log4cplus::Layout>(new log4cplus::PatternLayout("%D{%Y/%m/%d %H:%M:%S.%q} [%t] %-5p %c %x - %m%n")) );
                 log4cplus::Logger::getRoot().addAppender(append_0);
 
                 OFString tmpStr(ostr.str().c_str());
                 log4cplus::SharedAppenderPtr append_1(new log4cplus::RollingFileAppender(tmpStr, 5*1024*1024, 5,true));
                 append_1->setName(DCMTK_LOG4CPLUS_TEXT("AppenderFichero"));
-                append_1->setLayout( OFauto_ptr<log4cplus::Layout>(new log4cplus::PatternLayout("%D{%Y/%m/%d %H:%M:%S.%q} [%t] %-5p %c %x - %m%n")) );
+                append_1->setLayout( OFunique_ptr<log4cplus::Layout>(new log4cplus::PatternLayout("%D{%Y/%m/%d %H:%M:%S.%q} [%t] %-5p %c %x - %m%n")) );
                 log4cplus::Logger::getRoot().addAppender(append_1);
 
                 int logLevel;

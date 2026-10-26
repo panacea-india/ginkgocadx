@@ -44,7 +44,7 @@ public:
         AuthException(const std::string& msg, const std::string& componente="GSEC/Auth", bool _fatal = true) : GNC::GCS::IException(msg, componente, _fatal)
         {
         }
-        ~AuthException() throw()
+        ~AuthException() noexcept
         {
         }
 };

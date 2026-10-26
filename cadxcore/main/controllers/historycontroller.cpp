@@ -42,7 +42,7 @@
 #define LOGGER "HistoryController"
 #include "controladorlog.h"
 #include <sqlite/ginkgosqlite.h>
-#include <sqlite/sqlite3.h>
+#include <sqlite3.h>
 #include <commands/comandoincluirhistorial.h>
 
 #include <main/controllers/commandcontroller.h>

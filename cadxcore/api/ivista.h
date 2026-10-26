@@ -65,7 +65,7 @@ namespace GCS
 class EXTAPI VistaException : public GNC::GCS::IException
 {
 public:
-        VistaException(const std::string& msg, const std::string& component="Modelo", bool fatal = true) throw();
+        VistaException(const std::string& msg, const std::string& component="Modelo", bool fatal = true) noexcept;
 };
 //endregion
 

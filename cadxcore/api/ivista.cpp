@@ -34,7 +34,7 @@
 
 #include "ivista.h"
 
-GNC::GCS::VistaException::VistaException(const std::string& msg, const std::string& component, bool fatal) throw() : GNC::GCS::IException(msg ,component, fatal)
+GNC::GCS::VistaException::VistaException(const std::string& msg, const std::string& component, bool fatal) noexcept : GNC::GCS::IException(msg ,component, fatal)
 {
 }
 

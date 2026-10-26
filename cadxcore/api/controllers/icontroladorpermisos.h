@@ -31,7 +31,7 @@ namespace GCS
 class EXTAPI ControladorPermisosException : public GNC::GCS::IException
 {
 public:
-        ControladorPermisosException(const std::string& msg, bool fatal = true) throw();
+        ControladorPermisosException(const std::string& msg, bool fatal = true) noexcept;
 };
 
 namespace Permisos

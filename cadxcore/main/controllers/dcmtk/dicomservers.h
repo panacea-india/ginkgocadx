@@ -47,7 +47,7 @@ class IEntorno;
 class GinkgoNoServerFoundException : public GNC::GCS::IException
 {
 public:
-        GinkgoNoServerFoundException() throw() : GNC::GCS::IException(_Std("Server not found"), "DICOM", false) {}
+        GinkgoNoServerFoundException() noexcept : GNC::GCS::IException(_Std("Server not found"), "DICOM", false) {}
 };
 
 class WLConfig

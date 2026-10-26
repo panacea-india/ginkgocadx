@@ -152,8 +152,8 @@ public:
 class EXTAPI I2DException : public GNC::GCS::IException
 {
 public:
-        I2DException(const std::string& msg, const std::string& component="GIL/I2D", bool fatal = true) throw();
-        virtual ~I2DException() throw();
+        I2DException(const std::string& msg, const std::string& component="GIL/I2D", bool fatal = true) noexcept;
+        virtual ~I2DException() noexcept;
 };
 }
 }

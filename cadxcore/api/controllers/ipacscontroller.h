@@ -56,7 +56,7 @@ class EXTAPI PACSException : public GNC::GCS::IException
 {
 public:
         /** PACS Exception constructor **/
-        PACSException(const std::string& msg, const std::string& component="GIL/PACS", bool fatal = true) throw() ;
+        PACSException(const std::string& msg, const std::string& component="GIL/PACS", bool fatal = true) noexcept ;
 };
 
 typedef struct ContextoResultado {

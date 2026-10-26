@@ -109,10 +109,52 @@ docker run --rm -v "$PWD":/src \
 
 On a Linux desktop, mount `/tmp/.X11-unix` and pass your own `DISPLAY` instead.
 
-### Phase 1: the easier dependencies (weeks)
+### Phase 1: the easier dependencies (builds and starts, branch `phase1-modern-deps`)
 
-wxWidgets 3.2, ITK 5, current DCMTK, OpenSSL 3. Remove the bundled SQLite and
-the dead Windows/macOS build files. Fix the TLS issue.
+Build on Debian 12 (bookworm) with its wxWidgets 3.2, ITK 5, DCMTK 3.6.7 and
+OpenSSL 3. VTK 6.3 is still built from source with the legacy OpenGL backend
+(see `ci/Dockerfile.bookworm`) until Phase 2. This branch no longer builds on
+the buster image; `phase0-buildable` stays as the old-stack baseline.
+
+- [x] `ci/Dockerfile.bookworm`: Debian 12 packages plus VTK 6.3 from source
+- [x] wxWidgets 3.2 and GTK3
+- [x] ITK 5
+- [x] DCMTK 3.6.7, including the copied `libi2d` code
+- [x] OpenSSL 3
+- [x] Fix the TLS issue: `GTLSTransportLayer` now loads the client
+      certificate, key and system trust store through OpenSSL and returns real
+      errors; callers check them. Not yet tested against a TLS server.
+- [x] Remove the bundled SQLite (the build was compiling against its 2011
+      header while linking the system library)
+- [x] Remove the Visual Studio projects, `install_open_source/` and the forced
+      `i386` macOS architecture
+- [x] C++ clean-ups: `throw()` to `noexcept`, `OFauto_ptr` to
+      `OFunique_ptr`, `register`, bounded `snprintf`/`strlcpy`, `tempnam` to
+      `mkstemp`
+- [ ] Open a DICOM file and exercise the main tools on this build
+
+Findings:
+
+- wxWidgets 3.2 keeps asserts on even with `NDEBUG`, and its sizer flag
+  checks fired at startup and stopped the program.
+  `wxDISABLE_ASSERTS_IN_RELEASE_BUILD()` in `InitWX` restores the 3.0
+  behaviour. The sizer flags themselves are still wrong in the GUI code.
+- VTK 6.3's CMake files only recognise GCC 3 to 5; the Dockerfile widens the
+  version regex.
+- Debian's DCMTK doesn't ship `libi2d`, so the copied version stays.
+- Building VTK and Ginkgo with all cores can exhaust memory; use `JOBS=4`
+  (`docker run -e JOBS=4 ...`).
+
+To build and run:
+
+```
+docker build -t ginkgocadx-build-bookworm -f ci/Dockerfile.bookworm ci
+docker run --rm -e JOBS=4 -v "$PWD":/src ginkgocadx-build-bookworm \
+  ci/build.sh Release build-bookworm
+docker run --rm -v "$PWD":/src \
+  -v /run/desktop/mnt/host/wslg/.X11-unix:/tmp/.X11-unix -e DISPLAY=:0 \
+  ginkgocadx-build-bookworm ci/run.sh build-bookworm
+```
 
 ### Phase 2: VTK 9 port
 

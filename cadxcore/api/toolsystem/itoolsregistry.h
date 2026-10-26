@@ -37,7 +37,7 @@ namespace GCS
 class EXTAPI ToolsRegistryException : public GNC::GCS::IException
 {
 public:
-        ToolsRegistryException(const std::string& msg) throw();
+        ToolsRegistryException(const std::string& msg) noexcept;
 };
 
 /** Tools Registry container interface **/

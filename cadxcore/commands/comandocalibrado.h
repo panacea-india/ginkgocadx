@@ -38,8 +38,8 @@
 //
 //	class CalibradoParamsException : public GNC::GCS::IException {
 //	public:
-//		CalibradoParamsException(std::string& message) throw() {m_message=message;}
-//		 ~CalibradoParamsException() throw() {}
+//		CalibradoParamsException(std::string& message) noexcept {m_message=message;}
+//		 ~CalibradoParamsException() noexcept {}
 //		 std::string GetMensage(){return m_message;}
 //	protected:
 //		 std::string m_message;
