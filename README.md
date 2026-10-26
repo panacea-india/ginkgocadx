@@ -1,157 +1,77 @@
-# Ginkgo CADx - modified version with AppImage #
+# Ginkgo CADx
 
-## Changes ##
+Ginkgo CADx is a DICOM viewer and dicomizer. It can also convert PNG, JPEG,
+BMP, PDF and TIFF files to DICOM.
 
-1. Allow multiple selections for downloading.
-2. Enable download button, if selected items more than one.
-3. One date style (Y-m-d)
-4. Add AppImageBuilder.yml
+This repository continues the free version originally developed by
+[MetaEmotion](http://ginkgo-cadx.com/en/), through the forks listed in
+[docs/modernization-plan.md](docs/modernization-plan.md). It is licensed under
+the GNU Lesser General Public License v3.
 
-## Build AppImage ##
+## Status
 
-1. Install Debian 11 (or do it in Docker) and install `git`
+The code needs an old dependency stack (VTK 6, ITK 4, wxWidgets 3.0, DCMTK
+3.6.4) that current Linux distributions no longer ship. Until it is ported, the
+supported way to build it is the Debian 10 (buster) container in `ci/`. See
+[docs/modernization-plan.md](docs/modernization-plan.md) for the plan to move
+to current libraries.
 
-2. Get `ginkgocadx` debian sources (for example, it will create dir `ginkgocadx-3.8.8`):
+Changes in this branch on top of Ginkgo CADx 3.8.8:
 
-```
-apt source ginkgocadx
-```
+- Multiple selections for downloading, and the download button is enabled when
+  more than one item is selected.
+- One date style (Y-m-d).
+- An `AppImageBuilder.yml` recipe.
 
-3. Clone this repo and move changes of this branch like a debian patch:
+## Build
 
-```
-git clone https://gitlab.com/SgAkErRu/ginkgocadx.git -b improvements
-cd ./ginkgocadx
-git format-patch 3.8.8 --stdout > ../improvements.patch
-cp ../improvements.patch ../ginkgocadx-3.8.8/debian/patches/
-```
-
-4. Build and install new modified debian package:
-
-```
-cd ginkgocadx-3.8.8/
-sudo apt install packaging-dev debian-keyring devscripts equivs
-sudo mk-build-deps --install --remove
-sudo dch -l mod
-fakeroot debian/rules binary
-sudo dpkg-buildpackage -b -us -uc
-sudo apt install ../ginkgocadx_*_*.deb
-```
-
-5. Get or install `appimage-builder` (https://appimage-builder.readthedocs.io/en/latest/intro/install.html)
-
-6. Create folder `GinkgoAppImage` and put `AppImageBuilder.yml` there, like `/home/user/GinkgoAppImage/`. 
-
-Also change path in `AppImageBuilder.yml`, if you have path is not `/home/user/GinkgoAppImage/...`
-
-7. Create there `AppDir` folder and unzip debian package binary files (`data.tar.xz`) there, like:
-
-`AppDir/usr/bin/ginkgocadx`
-`AppDir/usr/lib/...`
-`AppDir/usr/share/...`
-
-etc.
-
-8. Build AppImage (it will create AppImage with `AppDir` binaries and deps that included in `AppImageBuilder.yml`):
+You need Docker on an x86_64 machine. The build image is amd64 only because
+buster's ITK 4 package is not built for other architectures.
 
 ```
-cd ./GinkgoAppImage
-appimage-builder
+docker build -t ginkgocadx-build -f ci/Dockerfile ci
+docker run --rm -v "$PWD":/src ginkgocadx-build ci/build.sh
 ```
 
-9. Launch `GinkgoCADx-3.8.8-mod1-x86_64.AppImage`
+The binary ends up at `build/ginkgocadx/ginkgocadx`. `ci/build.sh` takes an
+optional build type (`Release` or `Debug`) and build directory.
 
-==========================================
-==========================================
-==========================================
+On Windows, use a checkout where shell scripts keep LF line endings (the
+included `.gitattributes` takes care of this).
 
-[![Build Status](https://travis-ci.org/gerddie/ginkgocadx.svg?branch=master)](https://travis-ci.org/gerddie/ginkgocadx)
-[![Coverity Status](https://scan.coverity.com/projects/8214/badge.svg)](https://scan.coverity.com/projects/ginkgocadx)
+## Run
 
-# Ginkgo CADx #
+`ci/run.sh` installs the build inside the container and starts the program, so
+the container needs a display. On Windows 11 with Docker Desktop's WSL2 backend,
+use WSLg:
 
-## Preface ##
+```
+docker run --rm -v "$PWD":/src \
+  -v /run/desktop/mnt/host/wslg/.X11-unix:/tmp/.X11-unix -e DISPLAY=:0 \
+  ginkgocadx-build ci/run.sh
+```
 
-* Currently the project is maintained on a voluntary basis. 
-* There is no PRO version.
-* I can't help you with compiling this on MS Windows or Mac OS X 
+On a Linux desktop, mount `/tmp/.X11-unix` and pass your own `DISPLAY`.
 
-## Introduction ##
+## Building without Docker
 
-Ginkgo CADx is an advanced DICOM viewer and dicomizer that can
-also be used to convert png, jpeg, bmp, pdf, tiff to DICOM files.
+On Debian 10 the build dependencies are listed in `ci/Dockerfile`. Run
+`ci/build.sh` from the repository root. Newer distributions don't package the
+required VTK, ITK and wxWidgets versions.
 
-The version developed here is a continuation of the now abandoned
-free version developed by MetaEmotion:
+## AppImage
 
-    http://ginkgo-cadx.com/en/
+`AppImageBuilder.yml` builds an AppImage from an installed Debian package. The
+recipe was written for Debian 11, and its paths are still the original author's
+(`/home/user/GinkgoAppImage`). Adjust them before use.
 
+1. Build the Debian package from this branch (apply it as a patch on top of
+   `apt source ginkgocadx`) and unpack its `data.tar.xz` into
+   `GinkgoAppImage/AppDir`.
+2. Install [appimage-builder](https://appimage-builder.readthedocs.io/en/latest/intro/install.html).
+3. Run `appimage-builder` in the `GinkgoAppImage` directory.
 
-## License ##
+## Contributing
 
-Ginkgo CADx is licensed under the terms of the Lesser GNU Public
-Licence 3.
-
-## Build ##
-
-To build Ginkgo CADx the following software packages are required:
-
-* ITK (>= 4.8)
-* VTK (>= 6.2), Please note that the code does currently not compile with the
-  VTK OpenGL2 rendering backend (see #21 and #34). VTK >= 7.0 defaults to
-  this newer backend when configured without parameters, and currently
-  you will have to set VTK_RENDERING_BACKEND=OpenGL when building VTK to
-  sucessfully compile ginkgocadx. 
-* wxWidgets (>= 3.0.1)
-* DCMTK (>= 3.6.1-20150924)
-* A C++ compiler that supports the *C++11* standard
-* CMake
-
-With these prerequisites available run *cmake* on the Ginkgo CADx
-source tree and then use the selected build system to build the software.
-After the software was sucessfully compiled run the install target.
-
-
-The original Ginkgo CADx implementation was done with cross-platform
-compatibility in mind, i.e. the software should compile on MS Windows,
-Mac OS X, and flavours of Linux. However, currently the main development
-platforms are Debian GNU/Linux and Gentoo Linux using the GNU gcc compiler
-tool chain. Hence incompatibilities may creep in and bug reports with fixes
-for other platforms are very welcome. 
-
-
-### Debian/Ubuntu specific build instructions ###
-
-The following packages must be installed in order to compile it:
-
-
-    chrpath
-    cmake
-    libcairo2-dev
-    libcurl4-gnutls-dev
-    libdcmtk-dev
-    libfftw3-dev
-    libfreetype6-dev
-    libgtk2.0-dev
-    libinsighttoolkit4-dev
-    libjsoncpp-dev
-    libmysqlclient-dev
-    libsqlite3-dev
-    libssl-dev
-    libvtk6-dev
-    libwrap0-dev
-    libwxgtk3.0-dev
-    libxml2-dev
-    libgdcm-tools
-
-On Debian *Stretch* and *Sid* these packages can be installed by simply running
-
-    apt build-dep ginkgocadx
-
-On Ubuntu Xenial (16.04 )the package can be installed from the Xenial ports PPA: 
-
-   https://launchpad.net/~gert-die/+archive/ubuntu/xenial-mia
-
-For Yantal the package available from the usual Ubuntu repositories. 
-
-
+Bug reports and patches are welcome. There are no tests yet; please check that
+the container build still passes.

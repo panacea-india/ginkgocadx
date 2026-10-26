@@ -63,7 +63,7 @@ rewriting this drawing layer.
 
 ## Phases
 
-### Phase 0: buildable as-is (in progress, branch `phase0-buildable`)
+### Phase 0: buildable as-is (done, branch `phase0-buildable`)
 
 Build on the old stack in Docker so contributors have something that compiles.
 
@@ -74,9 +74,9 @@ Build on the old stack in Docker so contributors have something that compiles.
       linker warning is `tempnam` in `incomingdicomassociationcommand.cpp`)
 - [x] GitHub Actions workflow that builds the image and runs `ci/build.sh`
       (Release and Debug; untested until first push)
-- [ ] Remove `.travis.yml` and `model_ginkgo.cpp`
-- [ ] Raise `cmake_minimum_required` in all four `CMakeLists.txt` files
-- [ ] Rewrite the README so building starts from this repo
+- [x] Remove `.travis.yml` and `model_ginkgo.cpp`
+- [x] Raise `cmake_minimum_required` to 3.5 in all four `CMakeLists.txt` files
+- [x] Rewrite the README so building starts from this repo
 
 Findings so far:
 
