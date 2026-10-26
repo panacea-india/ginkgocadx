@@ -180,7 +180,8 @@ VTK 9.1 package replaces the source-built VTK 6.3.
 - [x] `GNC::GCS::LegacyGLScope` (`cadxcore/vtk/legacyglscope.cpp`) recreates the
       fixed-function state VTK 6 left behind (camera in the matrix stack, no
       shader, texture unit 0) and resynchronises VTK's state cache afterwards;
-      `WidgetsActor` and the image actor draw inside it
+      `WidgetsActor` and the image actor draw inside it (replaced in step 2 by
+      `GLDraw::FrameScope`)
 - [x] The image plane is drawn by `vtkGinkgoLegacyImageActor`, because
       `vtkGinkgoOpenGLTexture` binds its own texture and shader, which VTK 9's
       mappers would bypass
@@ -189,7 +190,8 @@ VTK 9.1 package replaces the source-built VTK 6.3.
 - [x] Image display and the ruler, angle and arrow tools work on screen;
       line and label colours re-checked on the ruler after the texture-unit fix
 
-**Step 2: replace the legacy OpenGL drawing (in progress).**
+**Step 2: replace the legacy OpenGL drawing (code done; some tools not yet
+checked on screen).**
 
 - [x] `GNC::GCS::GLDraw` (`cadxcore/vtk/gldraw.cpp`): the subset of
       fixed-function OpenGL the widgets use (immediate mode, matrix stack,
@@ -201,11 +203,20 @@ VTK 9.1 package replaces the source-built VTK 6.3.
       `glFoo` to `GLDraw::Foo`); the `welevacion` display list replaced by a
       direct draw. Checked on screen: image, ruler, angle, arrow, points and
       labels.
-- [ ] Image display: `vtkGinkgoOpenGLTexture` (its own texture, LUT and GLSL
-      1.10 shaders) and `vtkGinkgoLegacyImageActor` still use legacy OpenGL
-- [ ] `WidgetsActor::Render` still queries `GL_RENDER_MODE`
-- [ ] Then drop the compatibility-profile requirement and `LegacyGLScope`'s
-      fixed-function setup
+- [x] Image display: `vtkGinkgoOpenGLTexture::Load` only uploads, and `Draw`
+      renders with one GLSL 1.50 shader (CPU-mapped colours, grey through the
+      lookup table, RGB brightness/contrast). Grey textures are stored as RED
+      or RG with a swizzle. `vtkGinkgoImageActor` replaces the legacy actor.
+      Checked on screen: display, zoom, window/level.
+- [x] `LegacyGLScope` replaced by `GLDraw::FrameScope`, which only saves and
+      restores VTK's cached state; the `GL_RENDER_MODE` check is gone. No
+      fixed-function OpenGL is left outside `GLDraw`.
+- [x] The context check accepts any OpenGL 3.2+ context, core or compatibility
+- [ ] Check on screen: grid, magnifier, brightness/contrast overlay, ECG
+      widgets, corner annotations
+- [ ] Run once in a core-profile context. wx 3.2.2 can't request one on this X
+      server (see findings), so this hasn't been exercised; it is what macOS
+      would need.
 
 Findings:
 

@@ -57,7 +57,6 @@
 #include <vtk_glew.h>
 #include <vtkDebugLeaks.h>
 #include <vtk/vtkginkgoimageviewer.h>
-#include <vtk/legacyglscope.h>
 #include <api/controllers/icontroladorcarga.h>
 #include <vtk/gldraw.h>
 
@@ -324,16 +323,7 @@ WidgetsActor::~WidgetsActor()
 
 void WidgetsActor::Render(vtkRenderer* ren, vtkMapper* mapper)
 {
-        //double opacity;
-        int param;
-        glGetIntegerv(GL_RENDER_MODE, &param);
-        if (param == GL_SELECT) {
-                return;
-        }
-        //glGetIntegerv(GL_RENDER_MODE, param);
-        //glDepthMask( GL_FALSE );
-
-        GNC::GCS::LegacyGLScope legacyGL(ren);
+        GNC::GCS::GLDraw::FrameScope frame(ren);
 
         // build transformation
         if (!this->IsIdentity) {

@@ -21,6 +21,7 @@
 #include <vtk_glew.h>
 
 class vtkRenderer;
+class vtkOpenGLRenderWindow;
 
 namespace GNC
 {
@@ -34,8 +35,8 @@ namespace GCS
  * profile context.
  *
  * Functions are named after the GL calls they replace and have the same
- * semantics. Calls must happen between BeginFrame and EndFrame, which
- * GNC::GCS::LegacyGLScope does around widget rendering.
+ * semantics. Calls must happen inside a FrameScope (or between BeginFrame and
+ * EndFrame).
  */
 namespace GLDraw
 {
@@ -43,6 +44,24 @@ namespace GLDraw
 // GL resources of its render window.
 EXTAPI void BeginFrame(vtkRenderer* ren);
 EXTAPI void EndFrame();
+
+/**
+ * A frame inside a VTK render pass. Saves VTK's cached OpenGL state on
+ * construction and reapplies it on destruction, so GL state the drawing code
+ * changes directly (blending, depth, scissor, ...) doesn't confuse VTK.
+ */
+class EXTAPI FrameScope
+{
+public:
+        explicit FrameScope(vtkRenderer* ren);
+        ~FrameScope();
+
+private:
+        FrameScope(const FrameScope&) = delete;
+        FrameScope& operator=(const FrameScope&) = delete;
+
+        vtkOpenGLRenderWindow* m_pRenWin;
+};
 
 // Matrix stack (GL_MODELVIEW and GL_PROJECTION)
 EXTAPI void MatrixMode(GLenum mode);

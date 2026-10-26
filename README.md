@@ -11,9 +11,7 @@ the GNU Lesser General Public License v3.
 ## Status
 
 The code builds against Debian 12 (bookworm) libraries: wxWidgets 3.2, ITK 5,
-DCMTK 3.6.7, OpenSSL 3 and VTK 9.1. Its measurement and annotation tools still
-draw with legacy OpenGL, so it needs an OpenGL 3.2+ compatibility profile,
-which Mesa, NVIDIA and AMD drivers on Linux provide. See
+DCMTK 3.6.7, OpenSSL 3 and VTK 9.1, and needs OpenGL 3.2 or newer. See
 [docs/modernization-plan.md](docs/modernization-plan.md) for the plan.
 
 Changes in this branch on top of Ginkgo CADx 3.8.8:

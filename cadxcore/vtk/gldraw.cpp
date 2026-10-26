@@ -30,6 +30,7 @@
 #include <vtkOpenGLBufferObject.h>
 #include <vtkOpenGLRenderWindow.h>
 #include <vtkOpenGLShaderCache.h>
+#include <vtkOpenGLState.h>
 #include <vtkOpenGLVertexArrayObject.h>
 #include <vtkRenderer.h>
 #include <vtkShaderProgram.h>
@@ -168,6 +169,12 @@ struct SavedAttributes {
         GLboolean depthMask;
         GLint blendSrc;
         GLint blendDst;
+        bool lineSmooth;
+        bool polygonSmooth;
+        bool cullFace;
+        GLint cullFaceMode;
+        GLint frontFace;
+        GLint polygonMode[2];
 };
 
 // GL objects belong to one context; each render window has its own.
@@ -515,6 +522,29 @@ void GNC::GCS::GLDraw::EndFrame()
         CurrentWindow = NULL;
 }
 
+GNC::GCS::GLDraw::FrameScope::FrameScope(vtkRenderer* ren) :
+        m_pRenWin(vtkOpenGLRenderWindow::SafeDownCast(ren->GetRenderWindow()))
+{
+        if (m_pRenWin != NULL) {
+                m_pRenWin->GetState()->Push();
+                // The drawing code binds its textures (text labels, the
+                // magnifier) on whatever unit is active, and GLDraw samples
+                // unit 0. VTK leaves other units active.
+                m_pRenWin->GetState()->vtkglActiveTexture(GL_TEXTURE0);
+        }
+        BeginFrame(ren);
+}
+
+GNC::GCS::GLDraw::FrameScope::~FrameScope()
+{
+        EndFrame();
+        if (m_pRenWin != NULL) {
+                // Pop reapplies the state VTK had cached when the frame started
+                m_pRenWin->GetState()->Pop();
+                m_pRenWin->GetState()->ResetGLActiveTexture();
+        }
+}
+
 void GNC::GCS::GLDraw::MatrixMode(GLenum mode)
 {
         if (mode == GL_MODELVIEW || mode == GL_PROJECTION) {
@@ -716,6 +746,13 @@ void GNC::GCS::GLDraw::PushAttrib(GLbitfield /*mask*/)
         glGetBooleanv(GL_DEPTH_WRITEMASK, &saved.depthMask);
         glGetIntegerv(GL_BLEND_SRC_RGB, &saved.blendSrc);
         glGetIntegerv(GL_BLEND_DST_RGB, &saved.blendDst);
+        saved.lineSmooth = glIsEnabled(GL_LINE_SMOOTH);
+        saved.polygonSmooth = glIsEnabled(GL_POLYGON_SMOOTH);
+        saved.cullFace = glIsEnabled(GL_CULL_FACE);
+        glGetIntegerv(GL_CULL_FACE_MODE, &saved.cullFaceMode);
+        glGetIntegerv(GL_FRONT_FACE, &saved.frontFace);
+        saved.polygonMode[0] = saved.polygonMode[1] = GL_FILL;
+        glGetIntegerv(GL_POLYGON_MODE, saved.polygonMode);
         AttributeStack.push_back(saved);
 }
 
@@ -731,6 +768,12 @@ void GNC::GCS::GLDraw::PopAttrib()
         saved.scissorTest ? glEnable(GL_SCISSOR_TEST) : glDisable(GL_SCISSOR_TEST);
         glDepthMask(saved.depthMask);
         glBlendFunc(saved.blendSrc, saved.blendDst);
+        saved.lineSmooth ? glEnable(GL_LINE_SMOOTH) : glDisable(GL_LINE_SMOOTH);
+        saved.polygonSmooth ? glEnable(GL_POLYGON_SMOOTH) : glDisable(GL_POLYGON_SMOOTH);
+        saved.cullFace ? glEnable(GL_CULL_FACE) : glDisable(GL_CULL_FACE);
+        glCullFace(saved.cullFaceMode);
+        glFrontFace(saved.frontFace);
+        glPolygonMode(GL_FRONT_AND_BACK, saved.polygonMode[0]);
         AttributeStack.pop_back();
 }
 

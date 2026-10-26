@@ -199,22 +199,19 @@ static wxGLAttributes wxvtkDisplayAttributes()
 }
 #endif
 
-// VTK 9 needs OpenGL 3.2, and the widgets still draw with legacy OpenGL
-// (glBegin/glEnd), so the context must be a 3.2+ compatibility profile.
-// A plain wxGLContext gives the highest compatibility version the driver has
-// (Mesa and NVIDIA on Linux). Asking wx 3.2.2 for one explicitly with
-// wxGLContextAttrs fails on some X servers (glXCreateContext BadValue).
+// VTK 9 needs OpenGL 3.2. The drawing code no longer uses fixed-function
+// OpenGL, so a core or compatibility profile both work. A plain wxGLContext
+// gives the highest version the driver has on Linux (Mesa, NVIDIA, AMD).
+// Asking wx 3.2.2 for a specific version with wxGLContextAttrs fails on some
+// X servers (glXCreateContext BadValue), so it isn't used.
 static bool wxvtkContextIsUsable()
 {
-        GLint major = 0, minor = 0, profile = 0;
+        GLint major = 0, minor = 0;
         glGetIntegerv(GL_MAJOR_VERSION, &major);
         glGetIntegerv(GL_MINOR_VERSION, &minor);
-        if (major > 3 || (major == 3 && minor >= 2)) {
-                glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &profile);
-        }
-        const char* version = (const char*) glGetString(GL_VERSION);
-        if (major < 3 || (major == 3 && minor < 2) || (profile & GL_CONTEXT_CORE_PROFILE_BIT)) {
-                LOG_ERROR("Core/GL", "Need an OpenGL 3.2+ compatibility profile context, got: "
+        if (major < 3 || (major == 3 && minor < 2)) {
+                const char* version = (const char*) glGetString(GL_VERSION);
+                LOG_ERROR("Core/GL", "Need OpenGL 3.2 or newer, got: "
                           << (version != NULL ? version : "unknown"));
                 return false;
         }
