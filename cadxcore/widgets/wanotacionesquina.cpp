@@ -52,6 +52,9 @@
 #include <vtkPointData.h>
 #include <vtk/vtkginkgoimageviewer.h>
 #include "striptexthelper.h"
+#include <vtk/gldraw.h>
+
+namespace GLDraw = GNC::GCS::GLDraw;
 
 namespace GNC
 {
@@ -662,22 +665,22 @@ void GNC::GCS::Widgets::WAnotador::Render(GNC::GCS::Contexto3D* c)
         }
 
         double viewport[4] = {0.0f, 0.0f, 0.0f, 0.0f}; // { x, y, ancho, alto }. Convenio de coordenadas: {x, y} == {bottom, left}, {ancho, alto} == {top, right}
-        glGetDoublev(GL_VIEWPORT, viewport);
+        GLDraw::GetDoublev(GL_VIEWPORT, viewport);
 
-        glPushAttrib(GL_ALL_ATTRIB_BITS);
+        GLDraw::PushAttrib(GL_ALL_ATTRIB_BITS);
 
-        glMatrixMode(GL_TEXTURE);
-        glPushMatrix();
-        glLoadIdentity();
+        GLDraw::MatrixMode(GL_TEXTURE);
+        GLDraw::PushMatrix();
+        GLDraw::LoadIdentity();
 
-        glMatrixMode(GL_PROJECTION);
-        glPushMatrix();
-        glLoadIdentity();
-        glOrtho( 0, viewport[2] , viewport[3] , 0, -1, 1 );
+        GLDraw::MatrixMode(GL_PROJECTION);
+        GLDraw::PushMatrix();
+        GLDraw::LoadIdentity();
+        GLDraw::Ortho( 0, viewport[2] , viewport[3] , 0, -1, 1 );
 
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glLoadIdentity();
+        GLDraw::MatrixMode(GL_MODELVIEW);
+        GLDraw::PushMatrix();
+        GLDraw::LoadIdentity();
 
         Anotaciones* pAnotaciones = m_Estado->Get(c->GetRenderer());
         OrientationMarks* pOrientation = m_Estado->GetOrientation(c->GetRenderer());
@@ -696,17 +699,17 @@ void GNC::GCS::Widgets::WAnotador::Render(GNC::GCS::Contexto3D* c)
         pOrientation->Render(c, pAnotaciones->m_RectViewport);
 
 
-        glPopMatrix();
+        GLDraw::PopMatrix();
 
-        glMatrixMode(GL_PROJECTION);
-        glPopMatrix();
+        GLDraw::MatrixMode(GL_PROJECTION);
+        GLDraw::PopMatrix();
 
-        glMatrixMode(GL_TEXTURE);
-        glPopMatrix();
+        GLDraw::MatrixMode(GL_TEXTURE);
+        GLDraw::PopMatrix();
 
-        glMatrixMode(GL_MODELVIEW);
+        GLDraw::MatrixMode(GL_MODELVIEW);
 
-        glPopAttrib();
+        GLDraw::PopAttrib();
 }
 
 void GNC::GCS::Widgets::WAnotador::Seleccionar(bool )

@@ -35,6 +35,9 @@
 #include <vtk_glew.h>
 #include <api/westilo.h>
 #include <cmath>
+#include <vtk/gldraw.h>
+
+namespace GLDraw = GNC::GCS::GLDraw;
 
 //region "Implementacion de WPoligonoBuilder"
 
@@ -88,7 +91,7 @@ void GNC::GCS::Widgets::WPolygonBuilder::OnKeyEvents(GNC::GCS::Events::EventoTec
 void GNC::GCS::Widgets::WPolygonBuilder::Render(GNC::GCS::Contexto3D* /*c*/)
 {
 
-        glLineWidth(m_LineWidthProp);
+        GLDraw::LineWidth(m_LineWidthProp);
         wColorNormal.Aplicar();
 
         TPolygonVertexList::iterator prev = m_Vertices.begin();
@@ -96,34 +99,34 @@ void GNC::GCS::Widgets::WPolygonBuilder::Render(GNC::GCS::Contexto3D* /*c*/)
                 TPolygonVertexList::iterator curr = prev;
                 ++curr;
                 for (; curr != m_Vertices.end(); ++curr) {
-                        glBegin(GL_LINES);
-                        glVertex2d((*prev).x, (*prev).y);
-                        glVertex2d((*curr).x, (*curr).y);
-                        glEnd();
+                        GLDraw::Begin(GL_LINES);
+                        GLDraw::Vertex2d((*prev).x, (*prev).y);
+                        GLDraw::Vertex2d((*curr).x, (*curr).y);
+                        GLDraw::End();
                         prev = curr;
                 }
         }
 
 
         if (m_Vertices.size() > 2) {
-                glEnable(GL_LINE_STIPPLE);
-                glColor4f(0.7f, 0.7f, 0.0f, 1.0);
-                glLineStipple(3, 0xAAAA);
-                glBegin(GL_LINES);
-                glVertex2d(m_Vertices.front().x, m_Vertices.front().y);
-                glVertex2d(m_Vertices.back().x, m_Vertices.back().y);
-                glEnd();
-                glDisable(GL_LINE_STIPPLE);
+                GLDraw::Enable(GL_LINE_STIPPLE);
+                GLDraw::Color4f(0.7f, 0.7f, 0.0f, 1.0);
+                GLDraw::LineStipple(3, 0xAAAA);
+                GLDraw::Begin(GL_LINES);
+                GLDraw::Vertex2d(m_Vertices.front().x, m_Vertices.front().y);
+                GLDraw::Vertex2d(m_Vertices.back().x, m_Vertices.back().y);
+                GLDraw::End();
+                GLDraw::Disable(GL_LINE_STIPPLE);
         }
 
 
-        glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
-        glPointSize(WIDGET_SIZE_PUNTO);
-        glBegin(GL_POINTS);
+        GLDraw::Color4f(0.0f, 1.0f, 0.0f, 1.0f);
+        GLDraw::PointSize(WIDGET_SIZE_PUNTO);
+        GLDraw::Begin(GL_POINTS);
         for (TPolygonVertexList::iterator it = m_Vertices.begin(); it != m_Vertices.end(); ++it) {
-                glVertex2d((*it).x, (*it).y);
+                GLDraw::Vertex2d((*it).x, (*it).y);
         }
-        glEnd();
+        GLDraw::End();
 }
 
 GNC::GCS::Widgets::TipoCursor GNC::GCS::Widgets::WPolygonBuilder::GetCursor()
@@ -447,7 +450,7 @@ void GNC::GCS::Widgets::WPolygon::Render(GNC::GCS::Contexto3D* c)
 
 
         GNC::GCS::Vector escala = c->RelacionImagenPantalla();
-        glLineWidth(m_LineWidthProp);
+        GLDraw::LineWidth(m_LineWidthProp);
 
         float fsombrax, fsombray;
 
@@ -460,17 +463,17 @@ void GNC::GCS::Widgets::WPolygon::Render(GNC::GCS::Contexto3D* c)
         }
 
         wColorSombra.Aplicar();
-        glBegin(GL_LINE_LOOP);
+        GLDraw::Begin(GL_LINE_LOOP);
         for (TPolygonVertexList::iterator it = m_Vertices.begin(); it != m_Vertices.end(); ++it) {
-                glVertex2d((*it).x + fsombrax, (*it).y - fsombray);
+                GLDraw::Vertex2d((*it).x + fsombrax, (*it).y - fsombray);
         }
-        glEnd();
+        GLDraw::End();
 
-        glBegin(GL_POINTS);
+        GLDraw::Begin(GL_POINTS);
         for (TPolygonVertexList::iterator it = m_Vertices.begin(); it != m_Vertices.end(); ++it) {
-                glVertex2d((*it).x + fsombrax, (*it).y - fsombray);
+                GLDraw::Vertex2d((*it).x + fsombrax, (*it).y - fsombray);
         }
-        glEnd();
+        GLDraw::End();
 
         // Dibujo highlights puntos activos
         for (TPolygonVertexList::iterator it = m_Vertices.begin(); it != m_Vertices.end(); ++it) {
@@ -481,21 +484,21 @@ void GNC::GCS::Widgets::WPolygon::Render(GNC::GCS::Contexto3D* c)
 
         // Dibujo el poligono
         wAplicarColor(m_Iluminado, m_MouseDown, m_Seleccionado);
-        glBegin(GL_LINE_LOOP);
+        GLDraw::Begin(GL_LINE_LOOP);
         for (TPolygonVertexList::iterator it = m_Vertices.begin(); it != m_Vertices.end(); ++it) {
-                glVertex2d((*it).x, (*it).y);
+                GLDraw::Vertex2d((*it).x, (*it).y);
         }
-        glEnd();
+        GLDraw::End();
         m_Modificado = false;
 
-        glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
-        glPointSize(WIDGET_SIZE_PUNTO);
+        GLDraw::Color4f(0.0f, 1.0f, 0.0f, 1.0f);
+        GLDraw::PointSize(WIDGET_SIZE_PUNTO);
 
         for (TPolygonVertexList::iterator it = m_Vertices.begin(); it != m_Vertices.end(); ++it) {
                 wAplicarColor(m_Iluminado || (*it).m_Iluminado, m_MouseDown, m_Seleccionado);
-                glBegin(GL_POINTS);
-                glVertex2d((*it).x, (*it).y);
-                glEnd();
+                GLDraw::Begin(GL_POINTS);
+                GLDraw::Vertex2d((*it).x, (*it).y);
+                GLDraw::End();
         }
 }
 

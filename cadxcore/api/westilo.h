@@ -25,6 +25,7 @@
 #include <api/iwidgetsrenderer.h>
 #include <vtk/vtkginkgoimageviewer.h>
 #include <cairo/cairo.h>
+#include <vtk/gldraw.h>
 
 typedef struct TWidgetColor {
         float r, g, b, a;
@@ -38,7 +39,7 @@ typedef struct TWidgetColor {
 
         inline void Aplicar() const
         {
-                glColor4f(this->r, this->g, this->b, this->a);
+                GNC::GCS::GLDraw::Color4f(this->r, this->g, this->b, this->a);
         }
         inline void AplicarCairo(struct _cairo* cr) const
         {
@@ -55,9 +56,9 @@ typedef struct TWidgetColor {
 #define DEFAULT_TEXT_COLOR          0.0f, 0.75f, 0.75f, 1.0f
 #define DEFAULT_TEXT_COLOR_INVERTED 0.0f, 0.0f, 0.0f, 1.0f
 
-static TWidgetColor wColorNormal(0.0f, 1.0f, 0.0f, 1.0f); // glColor4f(0.0f, 1.0f, 0.0f, 0.75f);
-static TWidgetColor wColorNormalSuave(0.0f, 0.5f, 0.0f, 0.5f); // glColor4f(0.0f, 1.0f, 0.0f, 0.75f);
-static TWidgetColor wColorIluminado(1.0f, 1.0f, 0.0f, 1.0f); // glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
+static TWidgetColor wColorNormal(0.0f, 1.0f, 0.0f, 1.0f); // GNC::GCS::GLDraw::Color4f(0.0f, 1.0f, 0.0f, 0.75f);
+static TWidgetColor wColorNormalSuave(0.0f, 0.5f, 0.0f, 0.5f); // GNC::GCS::GLDraw::Color4f(0.0f, 1.0f, 0.0f, 0.75f);
+static TWidgetColor wColorIluminado(1.0f, 1.0f, 0.0f, 1.0f); // GNC::GCS::GLDraw::Color4f(1.0f, 1.0f, 0.0f, 1.0f);
 static TWidgetColor wColorMoviendose(1.0f, 0.0f, 0.0f, 1.0f);
 static TWidgetColor wColorSeleccionado(1.0f, 0.0f, 0.0f, 1.0f);
 static TWidgetColor wColorSeleccionadoIluminado(1.0f, 0.5f, 0.0f, 1.0f);
@@ -131,17 +132,17 @@ inline void wAplicarColorSuave(bool iluminado, bool moviendose, bool seleccionad
 
 inline void wDibujarElipseDegradado(const GNC::GCS::Vector &centro, const GNC::GCS::Vector &radio, const TWidgetColor &interior, const TWidgetColor &exterior, float resolucion=60.0f)
 {
-        glBegin(GL_TRIANGLE_FAN);
+        GNC::GCS::GLDraw::Begin(GL_TRIANGLE_FAN);
         float step = M_2PI / resolucion;
 
         interior.Aplicar();
-        glVertex3f(centro.x, centro.y, 0.0f);
+        GNC::GCS::GLDraw::Vertex3f(centro.x, centro.y, 0.0f);
 
         exterior.Aplicar();
         for (float angulo = 0; angulo < M_2PI; angulo += step) {
-                glVertex3f(centro.x + (radio.x * std::cos (angulo)) , centro.y + (radio.y * std::sin (angulo)), 0.0f);
+                GNC::GCS::GLDraw::Vertex3f(centro.x + (radio.x * std::cos (angulo)) , centro.y + (radio.y * std::sin (angulo)), 0.0f);
         }
-        glEnd();
+        GNC::GCS::GLDraw::End();
 }
 
 
@@ -154,34 +155,34 @@ inline void dibujarDecoracionTextura(const GNC::GCS::Vector* const quad, const G
          * */
 
         // Dibujo el fondo
-        glColor4f(0.0f, 0.0f, 0.0f, 0.61f);
-        glBegin(GL_QUADS);
-        glVertex2d(quad[0].x, quad[0].y);
-        glVertex2d(quad[1].x, quad[1].y);
-        glVertex2d(quad[2].x, quad[2].y);
-        glVertex2d(quad[3].x, quad[3].y);
-        glEnd();
+        GNC::GCS::GLDraw::Color4f(0.0f, 0.0f, 0.0f, 0.61f);
+        GNC::GCS::GLDraw::Begin(GL_QUADS);
+        GNC::GCS::GLDraw::Vertex2d(quad[0].x, quad[0].y);
+        GNC::GCS::GLDraw::Vertex2d(quad[1].x, quad[1].y);
+        GNC::GCS::GLDraw::Vertex2d(quad[2].x, quad[2].y);
+        GNC::GCS::GLDraw::Vertex2d(quad[3].x, quad[3].y);
+        GNC::GCS::GLDraw::End();
 
         // Dibujado el borde
-        glColor4f(0.2f, 0.2f, 0.2f, 1.0f);
-        glBegin(GL_LINE_LOOP);
-        glVertex2d(quad[0].x, quad[0].y);
-        glVertex2d(quad[1].x, quad[1].y);
-        glVertex2d(quad[2].x, quad[2].y);
-        glVertex2d(quad[3].x, quad[3].y);
-        glEnd();
+        GNC::GCS::GLDraw::Color4f(0.2f, 0.2f, 0.2f, 1.0f);
+        GNC::GCS::GLDraw::Begin(GL_LINE_LOOP);
+        GNC::GCS::GLDraw::Vertex2d(quad[0].x, quad[0].y);
+        GNC::GCS::GLDraw::Vertex2d(quad[1].x, quad[1].y);
+        GNC::GCS::GLDraw::Vertex2d(quad[2].x, quad[2].y);
+        GNC::GCS::GLDraw::Vertex2d(quad[3].x, quad[3].y);
+        GNC::GCS::GLDraw::End();
 
         // Dibujado de la sombra, lo hago en 2 tramos para evitar overlapping
-        glColor4f(0.0f, 0.0f, 0.0f, 0.3f);
-        glBegin(GL_LINE_STRIP);
-        glVertex2d(quad[1].x + 2 * escala.x, quad[1].y - 2 * escala.y);
-        glVertex2d(quad[2].x + 2 * escala.x, quad[2].y - 2 * escala.y);
-        glEnd();
+        GNC::GCS::GLDraw::Color4f(0.0f, 0.0f, 0.0f, 0.3f);
+        GNC::GCS::GLDraw::Begin(GL_LINE_STRIP);
+        GNC::GCS::GLDraw::Vertex2d(quad[1].x + 2 * escala.x, quad[1].y - 2 * escala.y);
+        GNC::GCS::GLDraw::Vertex2d(quad[2].x + 2 * escala.x, quad[2].y - 2 * escala.y);
+        GNC::GCS::GLDraw::End();
 
-        glBegin(GL_LINE_STRIP);
-        glVertex2d(quad[2].x + 1 * escala.x, quad[2].y - 2 * escala.y);
-        glVertex2d(quad[3].x + 2 * escala.x, quad[3].y - 2 * escala.y);
-        glEnd();
+        GNC::GCS::GLDraw::Begin(GL_LINE_STRIP);
+        GNC::GCS::GLDraw::Vertex2d(quad[2].x + 1 * escala.x, quad[2].y - 2 * escala.y);
+        GNC::GCS::GLDraw::Vertex2d(quad[3].x + 2 * escala.x, quad[3].y - 2 * escala.y);
+        GNC::GCS::GLDraw::End();
 
 }
 
@@ -202,14 +203,14 @@ inline void wDibujarTexturaTextoDecorada2D(GNC::GCS::Contexto3D* c, GNC::GCS::Te
 
         GNC::GCS::Vector escala(1.0, 1.0);
 
-        glMatrixMode(GL_PROJECTION);
-        glPushMatrix();
-        glLoadIdentity();
+        GNC::GCS::GLDraw::MatrixMode(GL_PROJECTION);
+        GNC::GCS::GLDraw::PushMatrix();
+        GNC::GCS::GLDraw::LoadIdentity();
 
-        glOrtho(0, c->ancho, 0, c->alto, -1, 1);
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glLoadIdentity();
+        GNC::GCS::GLDraw::Ortho(0, c->ancho, 0, c->alto, -1, 1);
+        GNC::GCS::GLDraw::MatrixMode(GL_MODELVIEW);
+        GNC::GCS::GLDraw::PushMatrix();
+        GNC::GCS::GLDraw::LoadIdentity();
 
         GNC::GCS::Vector quad[4];
 
@@ -238,10 +239,10 @@ inline void wDibujarTexturaTextoDecorada2D(GNC::GCS::Contexto3D* c, GNC::GCS::Te
 
         tc.Render2D(quad);
 
-        glPopMatrix();
-        glMatrixMode(GL_PROJECTION);
-        glPopMatrix();
-        glMatrixMode(GL_MODELVIEW);
+        GNC::GCS::GLDraw::PopMatrix();
+        GNC::GCS::GLDraw::MatrixMode(GL_PROJECTION);
+        GNC::GCS::GLDraw::PopMatrix();
+        GNC::GCS::GLDraw::MatrixMode(GL_MODELVIEW);
 }
 
 inline void wDibujarTexturaTexto2D(GNC::GCS::Contexto3D* c, GNC::GCS::TexturaCairo& tc, const GNC::GCS::Vector& rasterPos)
@@ -252,14 +253,14 @@ inline void wDibujarTexturaTexto2D(GNC::GCS::Contexto3D* c, GNC::GCS::TexturaCai
          *  q0   q1
          * */
 
-        glMatrixMode(GL_PROJECTION);
-        glPushMatrix();
-        glLoadIdentity();
+        GNC::GCS::GLDraw::MatrixMode(GL_PROJECTION);
+        GNC::GCS::GLDraw::PushMatrix();
+        GNC::GCS::GLDraw::LoadIdentity();
 
-        glOrtho(0, c->ancho, 0, c->alto, -1, 1);
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glLoadIdentity();
+        GNC::GCS::GLDraw::Ortho(0, c->ancho, 0, c->alto, -1, 1);
+        GNC::GCS::GLDraw::MatrixMode(GL_MODELVIEW);
+        GNC::GCS::GLDraw::PushMatrix();
+        GNC::GCS::GLDraw::LoadIdentity();
 
         GNC::GCS::Vector quad[4];
 
@@ -277,10 +278,10 @@ inline void wDibujarTexturaTexto2D(GNC::GCS::Contexto3D* c, GNC::GCS::TexturaCai
 
         tc.Render2D(quad);
 
-        glPopMatrix();
-        glMatrixMode(GL_PROJECTION);
-        glPopMatrix();
-        glMatrixMode(GL_MODELVIEW);
+        GNC::GCS::GLDraw::PopMatrix();
+        GNC::GCS::GLDraw::MatrixMode(GL_PROJECTION);
+        GNC::GCS::GLDraw::PopMatrix();
+        GNC::GCS::GLDraw::MatrixMode(GL_MODELVIEW);
 }
 
 inline void wDibujarBordeTexto2D(GNC::GCS::Contexto3D* c, GNC::GCS::TexturaCairo& tc, const GNC::GCS::Vector& rasterPos)
@@ -291,14 +292,14 @@ inline void wDibujarBordeTexto2D(GNC::GCS::Contexto3D* c, GNC::GCS::TexturaCairo
          *  q0   q1
          * */
 
-        glMatrixMode(GL_PROJECTION);
-        glPushMatrix();
-        glLoadIdentity();
+        GNC::GCS::GLDraw::MatrixMode(GL_PROJECTION);
+        GNC::GCS::GLDraw::PushMatrix();
+        GNC::GCS::GLDraw::LoadIdentity();
 
-        glOrtho(0, c->ancho, 0, c->alto, -1, 1);
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glLoadIdentity();
+        GNC::GCS::GLDraw::Ortho(0, c->ancho, 0, c->alto, -1, 1);
+        GNC::GCS::GLDraw::MatrixMode(GL_MODELVIEW);
+        GNC::GCS::GLDraw::PushMatrix();
+        GNC::GCS::GLDraw::LoadIdentity();
 
         GNC::GCS::Vector quad[4];
 
@@ -314,17 +315,17 @@ inline void wDibujarBordeTexto2D(GNC::GCS::Contexto3D* c, GNC::GCS::TexturaCairo
         quad[3].x = quad[0].x;
         quad[3].y = quad[2].y;
 
-        glBegin(GL_LINE_LOOP);
-        glVertex2d(quad[0].x, quad[0].y);
-        glVertex2d(quad[1].x, quad[1].y);
-        glVertex2d(quad[2].x, quad[2].y);
-        glVertex2d(quad[3].x, quad[3].y);
-        glEnd();
+        GNC::GCS::GLDraw::Begin(GL_LINE_LOOP);
+        GNC::GCS::GLDraw::Vertex2d(quad[0].x, quad[0].y);
+        GNC::GCS::GLDraw::Vertex2d(quad[1].x, quad[1].y);
+        GNC::GCS::GLDraw::Vertex2d(quad[2].x, quad[2].y);
+        GNC::GCS::GLDraw::Vertex2d(quad[3].x, quad[3].y);
+        GNC::GCS::GLDraw::End();
 
-        glPopMatrix();
-        glMatrixMode(GL_PROJECTION);
-        glPopMatrix();
-        glMatrixMode(GL_MODELVIEW);
+        GNC::GCS::GLDraw::PopMatrix();
+        GNC::GCS::GLDraw::MatrixMode(GL_PROJECTION);
+        GNC::GCS::GLDraw::PopMatrix();
+        GNC::GCS::GLDraw::MatrixMode(GL_MODELVIEW);
 }
 
 inline void wDibujarFondoTexto2D(GNC::GCS::Contexto3D* c, GNC::GCS::TexturaCairo& tc, const GNC::GCS::Vector& rasterPos)
@@ -335,14 +336,14 @@ inline void wDibujarFondoTexto2D(GNC::GCS::Contexto3D* c, GNC::GCS::TexturaCairo
          *  q0   q1
          * */
 
-        glMatrixMode(GL_PROJECTION);
-        glPushMatrix();
-        glLoadIdentity();
+        GNC::GCS::GLDraw::MatrixMode(GL_PROJECTION);
+        GNC::GCS::GLDraw::PushMatrix();
+        GNC::GCS::GLDraw::LoadIdentity();
 
-        glOrtho(0, c->ancho, 0, c->alto, -1, 1);
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glLoadIdentity();
+        GNC::GCS::GLDraw::Ortho(0, c->ancho, 0, c->alto, -1, 1);
+        GNC::GCS::GLDraw::MatrixMode(GL_MODELVIEW);
+        GNC::GCS::GLDraw::PushMatrix();
+        GNC::GCS::GLDraw::LoadIdentity();
 
         GNC::GCS::Vector quad[4];
 
@@ -358,16 +359,16 @@ inline void wDibujarFondoTexto2D(GNC::GCS::Contexto3D* c, GNC::GCS::TexturaCairo
         quad[3].x = quad[0].x;
         quad[3].y = quad[2].y;
 
-        glBegin(GL_QUADS);
+        GNC::GCS::GLDraw::Begin(GL_QUADS);
         for (int i = 0; i < 4; ++i) {
-                glVertex2dv(quad[i].v);
+                GNC::GCS::GLDraw::Vertex2dv(quad[i].v);
         }
-        glEnd();
+        GNC::GCS::GLDraw::End();
 
-        glPopMatrix();
-        glMatrixMode(GL_PROJECTION);
-        glPopMatrix();
-        glMatrixMode(GL_MODELVIEW);
+        GNC::GCS::GLDraw::PopMatrix();
+        GNC::GCS::GLDraw::MatrixMode(GL_PROJECTION);
+        GNC::GCS::GLDraw::PopMatrix();
+        GNC::GCS::GLDraw::MatrixMode(GL_MODELVIEW);
 }
 
 inline void AjustarAPixelsPantalla(GNC::GCS::Contexto3D* c, GNC::GCS::Vector* v, int numVectores)

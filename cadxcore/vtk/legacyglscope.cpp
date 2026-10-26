@@ -17,6 +17,7 @@
 
 #include <vtk_glew.h>
 #include "legacyglscope.h"
+#include "gldraw.h"
 
 #include <vtkCamera.h>
 #include <vtkMatrix4x4.h>
@@ -66,10 +67,14 @@ GNC::GCS::LegacyGLScope::LegacyGLScope(vtkRenderer* ren) :
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
         glLoadTransposeMatrixd(cam->GetViewTransformMatrix()->GetData());
+
+        GLDraw::BeginFrame(ren);
 }
 
 GNC::GCS::LegacyGLScope::~LegacyGLScope()
 {
+        GLDraw::EndFrame();
+
         glActiveTexture(GL_TEXTURE0);
         glMatrixMode(GL_TEXTURE);
         glLoadIdentity();

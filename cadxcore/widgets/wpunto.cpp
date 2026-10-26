@@ -31,6 +31,9 @@
 #include <vtk_glew.h>
 #include <api/westilo.h>
 #include <cmath>
+#include <vtk/gldraw.h>
+
+namespace GLDraw = GNC::GCS::GLDraw;
 
 
 //region "Implementacion de WPuntoBuilder"
@@ -297,60 +300,60 @@ void GNC::GCS::Widgets::WPunto::Render(GNC::GCS::Contexto3D* c)
         wColorSombra.Aplicar();
 
         // Circulo
-        glBegin(GL_LINE_LOOP);
+        GLDraw::Begin(GL_LINE_LOOP);
         float step = M_2PI / 30;
         for ( float angulo = 0; angulo < M_2PI; angulo += step) {
-                glVertex3f(m_Nodo.x + (radioCirculo.x * cos (angulo)) + fsombra.x , m_Nodo.y + (radioCirculo.y * sin (angulo)) - fsombra.y, 0.0f);
+                GLDraw::Vertex3f(m_Nodo.x + (radioCirculo.x * cos (angulo)) + fsombra.x , m_Nodo.y + (radioCirculo.y * sin (angulo)) - fsombra.y, 0.0f);
         }
-        glEnd();
+        GLDraw::End();
 
         // cruz
-        glBegin(GL_LINES);
-        glVertex3f(m_Nodo.x - radioCruz.x + fsombra.x, m_Nodo.y - fsombra.y, 0.0f);
-        glVertex3f(m_Nodo.x + radioCruz.x + fsombra.x, m_Nodo.y - fsombra.y, 0.0f);
-        glEnd();
+        GLDraw::Begin(GL_LINES);
+        GLDraw::Vertex3f(m_Nodo.x - radioCruz.x + fsombra.x, m_Nodo.y - fsombra.y, 0.0f);
+        GLDraw::Vertex3f(m_Nodo.x + radioCruz.x + fsombra.x, m_Nodo.y - fsombra.y, 0.0f);
+        GLDraw::End();
 
-        glBegin(GL_LINES);
-        glVertex3f(m_Nodo.x + fsombra.x, m_Nodo.y - radioCruz.y - fsombra.y, 0.0f);
-        glVertex3f(m_Nodo.x + fsombra.x, m_Nodo.y + radioCruz.y - fsombra.y, 0.0f);
-        glEnd();
+        GLDraw::Begin(GL_LINES);
+        GLDraw::Vertex3f(m_Nodo.x + fsombra.x, m_Nodo.y - radioCruz.y - fsombra.y, 0.0f);
+        GLDraw::Vertex3f(m_Nodo.x + fsombra.x, m_Nodo.y + radioCruz.y - fsombra.y, 0.0f);
+        GLDraw::End();
 
         // arrastre
         if (m_MouseDown) {
-                glEnable(GL_LINE_STIPPLE);
+                GLDraw::Enable(GL_LINE_STIPPLE);
                 wColorLineaArrastre.Aplicar();
-                glLineWidth(m_DraggingLineWidthProp);
-                glLineStipple(3, 0xAAAA);
+                GLDraw::LineWidth(m_DraggingLineWidthProp);
+                GLDraw::LineStipple(3, 0xAAAA);
 
-                glBegin(GL_LINE_STRIP);
-                glVertex2d(m_PosAntigua.x, m_PosAntigua.y);
-                glVertex2d(m_Nodo.x, m_Nodo.y);
-                glEnd();
+                GLDraw::Begin(GL_LINE_STRIP);
+                GLDraw::Vertex2d(m_PosAntigua.x, m_PosAntigua.y);
+                GLDraw::Vertex2d(m_Nodo.x, m_Nodo.y);
+                GLDraw::End();
 
-                glDisable(GL_LINE_STIPPLE);
+                GLDraw::Disable(GL_LINE_STIPPLE);
         }
 
         // Cuerpo
-        glLineWidth(m_LineWidthProp);
+        GLDraw::LineWidth(m_LineWidthProp);
         wAplicarColor(m_Nodo.m_Iluminado, m_MouseDown, m_Nodo.m_Seleccionado);
 
         // Circulo
-        glBegin(GL_LINE_LOOP);
+        GLDraw::Begin(GL_LINE_LOOP);
         for ( float angulo = 0; angulo < M_2PI; angulo += step) {
-                glVertex3f(m_Nodo.x + (radioCirculo.x * cos (angulo)) , m_Nodo.y + (radioCirculo.y * sin (angulo)), 0.0f);
+                GLDraw::Vertex3f(m_Nodo.x + (radioCirculo.x * cos (angulo)) , m_Nodo.y + (radioCirculo.y * sin (angulo)), 0.0f);
         }
-        glEnd();
+        GLDraw::End();
 
         // Cruz
-        glBegin(GL_LINES);
-        glVertex3f(m_Nodo.x - radioCruz.x, m_Nodo.y, 0.0f);
-        glVertex3f(m_Nodo.x + radioCruz.x, m_Nodo.y, 0.0f);
-        glEnd();
+        GLDraw::Begin(GL_LINES);
+        GLDraw::Vertex3f(m_Nodo.x - radioCruz.x, m_Nodo.y, 0.0f);
+        GLDraw::Vertex3f(m_Nodo.x + radioCruz.x, m_Nodo.y, 0.0f);
+        GLDraw::End();
 
-        glBegin(GL_LINES);
-        glVertex3f(m_Nodo.x, m_Nodo.y - radioCruz.y, 0.0f);
-        glVertex3f(m_Nodo.x, m_Nodo.y + radioCruz.y, 0.0f);
-        glEnd();
+        GLDraw::Begin(GL_LINES);
+        GLDraw::Vertex3f(m_Nodo.x, m_Nodo.y - radioCruz.y, 0.0f);
+        GLDraw::Vertex3f(m_Nodo.x, m_Nodo.y + radioCruz.y, 0.0f);
+        GLDraw::End();
 
         //label;
         Recalcular();

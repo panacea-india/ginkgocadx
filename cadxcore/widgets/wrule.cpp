@@ -43,6 +43,9 @@
 #include <resources/ginkgoresourcesmanager.h>
 
 #include <api/math/geometry3d.h>
+#include <vtk/gldraw.h>
+
+namespace GLDraw = GNC::GCS::GLDraw;
 
 //region "Implementacion de WRuleBuilder"
 
@@ -415,7 +418,7 @@ void GNC::GCS::Widgets::WRule::Render(GNC::GCS::Contexto3D* c)
 
         GNC::GCS::Vector escala = c->RelacionImagenPantalla();
 
-        glLineWidth(m_LineWidthProp);
+        GLDraw::LineWidth(m_LineWidthProp);
 
         // Highlights sobre nodos activos
         if (m_Vertices[0].m_Iluminado) {
@@ -437,17 +440,17 @@ void GNC::GCS::Widgets::WRule::Render(GNC::GCS::Contexto3D* c)
         //------------------------------------------------------------------------------------------
         // Sombra de la regla
         wColorSombra.Aplicar();
-        glBegin(GL_LINES);
-        glVertex2d(m_Vertices[0].x + fsombra.x, m_Vertices[0].y - fsombra.y);
-        glVertex2d(m_Vertices[1].x + fsombra.x, m_Vertices[1].y - fsombra.y);
-        glEnd();
+        GLDraw::Begin(GL_LINES);
+        GLDraw::Vertex2d(m_Vertices[0].x + fsombra.x, m_Vertices[0].y - fsombra.y);
+        GLDraw::Vertex2d(m_Vertices[1].x + fsombra.x, m_Vertices[1].y - fsombra.y);
+        GLDraw::End();
 
         // Dibujado de la regla
         wAplicarColor(m_Iluminado, m_MouseDown, m_Seleccionado);
-        glBegin(GL_LINES);
-        glVertex2d(m_Vertices[0].x, m_Vertices[0].y);
-        glVertex2d(m_Vertices[1].x, m_Vertices[1].y);
-        glEnd();
+        GLDraw::Begin(GL_LINES);
+        GLDraw::Vertex2d(m_Vertices[0].x, m_Vertices[0].y);
+        GLDraw::Vertex2d(m_Vertices[1].x, m_Vertices[1].y);
+        GLDraw::End();
 
 
         TVector diff = m_Vertices[1] - m_Vertices[0];
@@ -472,55 +475,55 @@ void GNC::GCS::Widgets::WRule::Render(GNC::GCS::Contexto3D* c)
         // Dibujado de las marcas de la regla.
         //-- Sombras
         wColorSombra.Aplicar();
-        glBegin(GL_LINES);
-        glVertex2d(f00.x + fsombra.x, f00.y - fsombra.y);
-        glVertex2d(f01.x + fsombra.x, f01.y - fsombra.y);
-        glEnd();
+        GLDraw::Begin(GL_LINES);
+        GLDraw::Vertex2d(f00.x + fsombra.x, f00.y - fsombra.y);
+        GLDraw::Vertex2d(f01.x + fsombra.x, f01.y - fsombra.y);
+        GLDraw::End();
 
-        glBegin(GL_LINES);
-        glVertex2d(f10.x + fsombra.x, f10.y - fsombra.y);
-        glVertex2d(puntoMedio.x + fsombra.x, puntoMedio.y - fsombra.y);
-        glEnd();
+        GLDraw::Begin(GL_LINES);
+        GLDraw::Vertex2d(f10.x + fsombra.x, f10.y - fsombra.y);
+        GLDraw::Vertex2d(puntoMedio.x + fsombra.x, puntoMedio.y - fsombra.y);
+        GLDraw::End();
 
-        glBegin(GL_LINES);
-        glVertex2d(f20.x + fsombra.x, f20.y - fsombra.y);
-        glVertex2d(f21.x + fsombra.x, f21.y - fsombra.y);
-        glEnd();
+        GLDraw::Begin(GL_LINES);
+        GLDraw::Vertex2d(f20.x + fsombra.x, f20.y - fsombra.y);
+        GLDraw::Vertex2d(f21.x + fsombra.x, f21.y - fsombra.y);
+        GLDraw::End();
 
         // Right mark
-        glBegin(GL_LINES);
-        glVertex2d(f20.x + fsombra.x, f20.y - fsombra.y);
-        glVertex2d(f21.x + fsombra.x, f21.y - fsombra.y);
-        glEnd();
+        GLDraw::Begin(GL_LINES);
+        GLDraw::Vertex2d(f20.x + fsombra.x, f20.y - fsombra.y);
+        GLDraw::Vertex2d(f21.x + fsombra.x, f21.y - fsombra.y);
+        GLDraw::End();
 
         //-- Left mark
         wAplicarColor(m_Iluminado || m_Vertices[0].m_Iluminado, m_MouseDown, m_Seleccionado);
-        glBegin(GL_LINES);
-        glVertex2d(f00.x, f00.y);
-        glVertex2d(f01.x, f01.y);
-        glEnd();
+        GLDraw::Begin(GL_LINES);
+        GLDraw::Vertex2d(f00.x, f00.y);
+        GLDraw::Vertex2d(f01.x, f01.y);
+        GLDraw::End();
 
         //-- Central mark
         wAplicarColor(m_Iluminado, m_MouseDown, m_Seleccionado);
-        glBegin(GL_LINES);
-        glVertex2d(f10.x, f10.y);
-        glVertex2d(puntoMedio.x, puntoMedio.y);
-        glEnd();
+        GLDraw::Begin(GL_LINES);
+        GLDraw::Vertex2d(f10.x, f10.y);
+        GLDraw::Vertex2d(puntoMedio.x, puntoMedio.y);
+        GLDraw::End();
 
         // Right mark
         wAplicarColor(m_Iluminado || m_Vertices[1].m_Iluminado, m_MouseDown, m_Seleccionado);
-        glBegin(GL_LINES);
-        glVertex2d(f20.x, f20.y);
-        glVertex2d(f21.x, f21.y);
-        glEnd();
+        GLDraw::Begin(GL_LINES);
+        GLDraw::Vertex2d(f20.x, f20.y);
+        GLDraw::Vertex2d(f21.x, f21.y);
+        GLDraw::End();
 
         //------------------------------------------------------------------------------------------
         // Dibujado de la linea punteada de arrastre
         if (m_MouseDown) {
-                glLineWidth(m_DraggingLineWidthProp);
-                glEnable(GL_LINE_STIPPLE);
+                GLDraw::LineWidth(m_DraggingLineWidthProp);
+                GLDraw::Enable(GL_LINE_STIPPLE);
                 wColorLineaArrastre.Aplicar();
-                glLineStipple(3, 0xAAAA);
+                GLDraw::LineStipple(3, 0xAAAA);
 
                 GNC::GCS::Vector startPoint, endPoint;
                 if (m_Vertices[0].m_Seleccionado) {
@@ -534,12 +537,12 @@ void GNC::GCS::Widgets::WRule::Render(GNC::GCS::Contexto3D* c)
                         endPoint = m_Centro;
                 }
 
-                glBegin(GL_LINE_STRIP);
-                glVertex2d(startPoint.x, startPoint.y);
-                glVertex2d(endPoint.x, endPoint.y);
-                glEnd();
+                GLDraw::Begin(GL_LINE_STRIP);
+                GLDraw::Vertex2d(startPoint.x, startPoint.y);
+                GLDraw::Vertex2d(endPoint.x, endPoint.y);
+                GLDraw::End();
 
-                glDisable(GL_LINE_STIPPLE);
+                GLDraw::Disable(GL_LINE_STIPPLE);
         }
 
 }
@@ -671,7 +674,7 @@ void GNC::GCS::Widgets::WRule::OffscreenRender(GNC::GCS::Contexto3D* c)
 
         GNC::GCS::Vector vert[2] = {c->Reproyectar(m_Vertices[0]) * c->factorReescalado, c->Reproyectar(m_Vertices[1]) * c->factorReescalado };
 
-        glLineWidth(m_LineWidthProp);
+        GLDraw::LineWidth(m_LineWidthProp);
 
         // Dibujado de la regla
         wColorNormal.AplicarCairo(c->cr);

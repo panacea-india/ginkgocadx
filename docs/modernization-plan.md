@@ -189,10 +189,23 @@ VTK 9.1 package replaces the source-built VTK 6.3.
 - [x] Image display and the ruler, angle and arrow tools work on screen;
       line and label colours re-checked on the ruler after the texture-unit fix
 
-**Step 2: replace the legacy OpenGL drawing (not started).** Move the 32 files
-of immediate-mode drawing behind a small modern-GL helper, one widget at a
-time, so the compatibility profile is no longer needed (and macOS becomes
-possible).
+**Step 2: replace the legacy OpenGL drawing (in progress).**
+
+- [x] `GNC::GCS::GLDraw` (`cadxcore/vtk/gldraw.cpp`): the subset of
+      fixed-function OpenGL the widgets use (immediate mode, matrix stack,
+      colour, line width and stipple, point size, 2D texturing, attribute
+      stack), drawn with one shader through VTK's shader cache and buffer
+      classes. Wide and stippled lines are built on the CPU in window
+      coordinates.
+- [x] All widget drawing converted (about 1,130 calls in 28 files, by renaming
+      `glFoo` to `GLDraw::Foo`); the `welevacion` display list replaced by a
+      direct draw. Checked on screen: image, ruler, angle, arrow, points and
+      labels.
+- [ ] Image display: `vtkGinkgoOpenGLTexture` (its own texture, LUT and GLSL
+      1.10 shaders) and `vtkGinkgoLegacyImageActor` still use legacy OpenGL
+- [ ] `WidgetsActor::Render` still queries `GL_RENDER_MODE`
+- [ ] Then drop the compatibility-profile requirement and `LegacyGLScope`'s
+      fixed-function setup
 
 Findings:
 
@@ -207,6 +220,10 @@ Findings:
 - VTK 9 leaves other texture units active; legacy code drawing text as
   textured quads then shows black boxes.
 - Each container starts as a first run, so Ginkgo shows its license dialog.
+- VTK 9 clears to the background colour with alpha 0. Copied to the wx
+  canvas, that left earlier frames visible behind the image when panning or
+  zooming; `wxVTKRenderWindowInteractor::Render` makes every renderer's
+  background opaque.
 
 ### Phase 3: open the doors
 

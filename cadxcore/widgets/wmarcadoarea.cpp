@@ -30,6 +30,9 @@
 #include <vtk_glew.h>
 #include <api/westilo.h>
 #include <cmath>
+#include <vtk/gldraw.h>
+
+namespace GLDraw = GNC::GCS::GLDraw;
 
 
 //====================================================================================================
@@ -156,7 +159,7 @@ void GNC::GCS::Widgets::WMarcadoAreaBuilder::Render(GNC::GCS::Contexto3D* /*c*/)
                 return;
         }
 
-        glLineWidth(m_LineWidthProp);
+        GLDraw::LineWidth(m_LineWidthProp);
         wColorNormal.Aplicar();
 
         VerticesPoligono::iterator prev = m_Vertices.begin();
@@ -164,23 +167,23 @@ void GNC::GCS::Widgets::WMarcadoAreaBuilder::Render(GNC::GCS::Contexto3D* /*c*/)
                 VerticesPoligono::iterator curr = prev;
                 ++curr;
                 for (; curr != m_Vertices.end(); ++curr) {
-                        glBegin(GL_LINES);
-                        glVertex2d((*prev).x, (*prev).y);
-                        glVertex2d((*curr).x, (*curr).y);
-                        glEnd();
+                        GLDraw::Begin(GL_LINES);
+                        GLDraw::Vertex2d((*prev).x, (*prev).y);
+                        GLDraw::Vertex2d((*curr).x, (*curr).y);
+                        GLDraw::End();
                         prev = curr;
                 }
         }
 
         if (m_Vertices.size() > 2) {
-                glEnable(GL_LINE_STIPPLE);
-                glColor4f(0.7f, 0.7f, 0.0f, 1.0);
-                glLineStipple(3, 0xAAAA);
-                glBegin(GL_LINES);
-                glVertex2d(m_Vertices.front().x, m_Vertices.front().y);
-                glVertex2d(m_Vertices.back().x, m_Vertices.back().y);
-                glEnd();
-                glDisable(GL_LINE_STIPPLE);
+                GLDraw::Enable(GL_LINE_STIPPLE);
+                GLDraw::Color4f(0.7f, 0.7f, 0.0f, 1.0);
+                GLDraw::LineStipple(3, 0xAAAA);
+                GLDraw::Begin(GL_LINES);
+                GLDraw::Vertex2d(m_Vertices.front().x, m_Vertices.front().y);
+                GLDraw::Vertex2d(m_Vertices.back().x, m_Vertices.back().y);
+                GLDraw::End();
+                GLDraw::Disable(GL_LINE_STIPPLE);
         }
 }
 
@@ -408,21 +411,21 @@ void GNC::GCS::Widgets::WMarcadoArea::Render(GNC::GCS::Contexto3D* c)
         }
 
         GNC::GCS::Vector escala = c->RelacionImagenPantalla();
-        glLineWidth(m_LineWidthProp);
+        GLDraw::LineWidth(m_LineWidthProp);
 
-        glBegin(GL_POINTS);
+        GLDraw::Begin(GL_POINTS);
         for (VerticesPoligono::iterator it = m_Vertices.begin(); it != m_Vertices.end(); ++it) {
-                glVertex2d((*it).x , (*it).y );
+                GLDraw::Vertex2d((*it).x , (*it).y );
         }
-        glEnd();
+        GLDraw::End();
 
         // Dibujo el poligono
         wAplicarColor(m_Iluminado, m_MouseDown, m_Seleccionado);
-        glBegin(GL_LINE_LOOP);
+        GLDraw::Begin(GL_LINE_LOOP);
         for (VerticesPoligono::iterator it = m_Vertices.begin(); it != m_Vertices.end(); ++it) {
-                glVertex2d((*it).x, (*it).y);
+                GLDraw::Vertex2d((*it).x, (*it).y);
         }
-        glEnd();
+        GLDraw::End();
 
         m_Modificado = false;
 }

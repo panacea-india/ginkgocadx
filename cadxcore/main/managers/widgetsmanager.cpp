@@ -52,6 +52,9 @@
 #include <cairo/cairo.h>
 
 #include <vtk/vtkginkgoimageviewer.h>
+#include <vtk/gldraw.h>
+
+namespace GLDraw = GNC::GCS::GLDraw;
 
 class TimerAnimation : public wxTimer
 {
@@ -178,7 +181,7 @@ void GNC::WidgetsManager::RenderPrivate(GNC::GCS::Contexto3D* c)
                 return;
         }
 
-        glPushAttrib(GL_ENABLE_BIT);
+        GLDraw::PushAttrib(GL_ENABLE_BIT);
         bool widgetIluminado = false;
         // Primera pasada: widgets normales.
         for (IteradorListaWidgets it = m_Widgets.begin(); it != m_Widgets.end(); ++it) {
@@ -271,7 +274,7 @@ void GNC::WidgetsManager::RenderPrivate(GNC::GCS::Contexto3D* c)
 
         c->GetRenderer()->Modificar(false);
 
-        glPopAttrib();
+        GLDraw::PopAttrib();
 }
 
 void GNC::WidgetsManager::Render()

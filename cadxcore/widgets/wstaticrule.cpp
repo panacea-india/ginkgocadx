@@ -47,6 +47,9 @@
 #include <vtkImageActor.h>
 #include <vtkPointData.h>
 #include <vtk/vtkginkgoimageviewer.h>
+#include <vtk/gldraw.h>
+
+namespace GLDraw = GNC::GCS::GLDraw;
 
 
 //region "Constructor y destructor"
@@ -102,22 +105,22 @@ void GNC::GCS::Widgets::WStaticRule::Render(GNC::GCS::Contexto3D* c)
         vtkGinkgoImageViewer* pImageViewer = c->GetRenderer()->m_pImageViewer;
 
         double viewport[4] = {0.0f, 0.0f, 0.0f, 0.0f}; // { x, y, ancho, alto }. Convenio de coordenadas: {x, y} == {bottom, left}, {ancho, alto} == {top, right}
-        glGetDoublev(GL_VIEWPORT, viewport);
+        GLDraw::GetDoublev(GL_VIEWPORT, viewport);
 
-        glPushAttrib(GL_ALL_ATTRIB_BITS);
+        GLDraw::PushAttrib(GL_ALL_ATTRIB_BITS);
 
-        glMatrixMode(GL_TEXTURE);
-        glPushMatrix();
-        glLoadIdentity();
+        GLDraw::MatrixMode(GL_TEXTURE);
+        GLDraw::PushMatrix();
+        GLDraw::LoadIdentity();
 
-        glMatrixMode(GL_PROJECTION);
-        glPushMatrix();
-        glLoadIdentity();
-        glOrtho( 0, viewport[2] , viewport[3] , 0, -1, 1 );
+        GLDraw::MatrixMode(GL_PROJECTION);
+        GLDraw::PushMatrix();
+        GLDraw::LoadIdentity();
+        GLDraw::Ortho( 0, viewport[2] , viewport[3] , 0, -1, 1 );
 
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glLoadIdentity();
+        GLDraw::MatrixMode(GL_MODELVIEW);
+        GLDraw::PushMatrix();
+        GLDraw::LoadIdentity();
 
 
         {
@@ -131,60 +134,60 @@ void GNC::GCS::Widgets::WStaticRule::Render(GNC::GCS::Contexto3D* c)
                 GNC::GCS::Vector ruleFragments(10.0, 10.0);
 
                 // Dibujado de la regla
-                glLineWidth(m_LineWidthProp);
+                GLDraw::LineWidth(m_LineWidthProp);
 
                 const double ruleMeasureScreen[2] = {ruleMeasure.x / screenToWorld.x, ruleMeasure.y / screenToWorld.y};
                 const double xLimitsRule[2] = {(viewport[2]/2)-(0.5*ruleMeasureScreen[0]), (viewport[2]/2)+(0.5*ruleMeasureScreen[0])};
                 const double yLimitsRule[2] = {(viewport[3]/2)-(0.5*ruleMeasureScreen[1]), (viewport[3]/2)+(0.5*ruleMeasureScreen[1])};
 
-                glColor4f(m_color.RF(), m_color.GF(), m_color.BF(), m_color.AF());
-                glBegin(GL_LINES);
-                glVertex2d(xLimitsRule[0], viewport[3] - RULE_MARGIN);
-                glVertex2d(xLimitsRule[1], viewport[3] - RULE_MARGIN);
-                glEnd();
+                GLDraw::Color4f(m_color.RF(), m_color.GF(), m_color.BF(), m_color.AF());
+                GLDraw::Begin(GL_LINES);
+                GLDraw::Vertex2d(xLimitsRule[0], viewport[3] - RULE_MARGIN);
+                GLDraw::Vertex2d(xLimitsRule[1], viewport[3] - RULE_MARGIN);
+                GLDraw::End();
 
                 //marks
                 for (int i = 0; i <= ruleFragments.x; ++i) {
-                        glBegin(GL_LINES);
-                        glVertex2d(xLimitsRule[0] + (i*ruleMeasureScreen[0]/ruleFragments.x), viewport[3] - RULE_MARGIN);
+                        GLDraw::Begin(GL_LINES);
+                        GLDraw::Vertex2d(xLimitsRule[0] + (i*ruleMeasureScreen[0]/ruleFragments.x), viewport[3] - RULE_MARGIN);
                         if (i%5==0) {
-                                glVertex2d(xLimitsRule[0] + (i*ruleMeasureScreen[0]/ruleFragments.x), viewport[3] - RULE_MARGIN - SIZE_BIG_MARKS);
+                                GLDraw::Vertex2d(xLimitsRule[0] + (i*ruleMeasureScreen[0]/ruleFragments.x), viewport[3] - RULE_MARGIN - SIZE_BIG_MARKS);
                         } else {
-                                glVertex2d(xLimitsRule[0] + (i*ruleMeasureScreen[0]/ruleFragments.x), viewport[3] - RULE_MARGIN - SIZE_SMALL_MARKS);
+                                GLDraw::Vertex2d(xLimitsRule[0] + (i*ruleMeasureScreen[0]/ruleFragments.x), viewport[3] - RULE_MARGIN - SIZE_SMALL_MARKS);
                         }
-                        glEnd();
+                        GLDraw::End();
                 }
 
                 //yRule
-                glBegin(GL_LINES);
-                glVertex2d(RULE_MARGIN,yLimitsRule[0]);
-                glVertex2d(RULE_MARGIN,yLimitsRule[1]);
-                glEnd();
+                GLDraw::Begin(GL_LINES);
+                GLDraw::Vertex2d(RULE_MARGIN,yLimitsRule[0]);
+                GLDraw::Vertex2d(RULE_MARGIN,yLimitsRule[1]);
+                GLDraw::End();
 
                 //marks
                 for (int i = 0; i <=  ruleFragments.y; ++i) {
-                        glBegin(GL_LINES);
-                        glVertex2d(RULE_MARGIN, yLimitsRule[0] + (i*ruleMeasureScreen[1]/ruleFragments.y));
+                        GLDraw::Begin(GL_LINES);
+                        GLDraw::Vertex2d(RULE_MARGIN, yLimitsRule[0] + (i*ruleMeasureScreen[1]/ruleFragments.y));
                         if (i%5==0) {
-                                glVertex2d(RULE_MARGIN + SIZE_BIG_MARKS, yLimitsRule[0] + (i*ruleMeasureScreen[1]/ruleFragments.y) );
+                                GLDraw::Vertex2d(RULE_MARGIN + SIZE_BIG_MARKS, yLimitsRule[0] + (i*ruleMeasureScreen[1]/ruleFragments.y) );
                         } else {
-                                glVertex2d(RULE_MARGIN + SIZE_SMALL_MARKS, yLimitsRule[0] + (i*ruleMeasureScreen[1]/ruleFragments.y) );
+                                GLDraw::Vertex2d(RULE_MARGIN + SIZE_SMALL_MARKS, yLimitsRule[0] + (i*ruleMeasureScreen[1]/ruleFragments.y) );
                         }
-                        glEnd();
+                        GLDraw::End();
                 }
         }
 
-        glPopMatrix();
+        GLDraw::PopMatrix();
 
-        glMatrixMode(GL_PROJECTION);
-        glPopMatrix();
+        GLDraw::MatrixMode(GL_PROJECTION);
+        GLDraw::PopMatrix();
 
-        glMatrixMode(GL_TEXTURE);
-        glPopMatrix();
+        GLDraw::MatrixMode(GL_TEXTURE);
+        GLDraw::PopMatrix();
 
-        glMatrixMode(GL_MODELVIEW);
+        GLDraw::MatrixMode(GL_MODELVIEW);
 
-        glPopAttrib();
+        GLDraw::PopAttrib();
 }
 
 void GNC::GCS::Widgets::WStaticRule::Modificar (bool /*modificada*/)

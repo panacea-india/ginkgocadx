@@ -29,6 +29,9 @@
 #include <api/westilo.h>
 #include <cmath>
 #include <wx/xml/xml.h>
+#include <vtk/gldraw.h>
+
+namespace GLDraw = GNC::GCS::GLDraw;
 
 #define WRADIO_CRUZ 8.0f
 #define WLONGITUD_LINEA 15.0f
@@ -149,56 +152,56 @@ void DibujaAspa(const GNC::GCS::Nodo& nodo, float radioCruz, bool rallado = fals
 {
         // Cruz
         if(rallado) {
-                glEnable(GL_LINE_STIPPLE);
-                glLineStipple(3, 0xAAAA);
+                GLDraw::Enable(GL_LINE_STIPPLE);
+                GLDraw::LineStipple(3, 0xAAAA);
         }
-        glBegin(GL_LINE_STRIP);
-        glVertex3f(nodo.x - radioCruz + fsombrax, nodo.y - fsombray, 0.0f);
-        glVertex3f(nodo.x + fsombrax, nodo.y - fsombray, 0.0f);
-        glEnd();
-        glBegin(GL_LINE_STRIP);
-        glVertex3f(nodo.x + radioCruz + fsombrax, nodo.y - fsombray, 0.0f);
-        glVertex3f(nodo.x + fsombrax, nodo.y - fsombray, 0.0f);
-        glEnd();
+        GLDraw::Begin(GL_LINE_STRIP);
+        GLDraw::Vertex3f(nodo.x - radioCruz + fsombrax, nodo.y - fsombray, 0.0f);
+        GLDraw::Vertex3f(nodo.x + fsombrax, nodo.y - fsombray, 0.0f);
+        GLDraw::End();
+        GLDraw::Begin(GL_LINE_STRIP);
+        GLDraw::Vertex3f(nodo.x + radioCruz + fsombrax, nodo.y - fsombray, 0.0f);
+        GLDraw::Vertex3f(nodo.x + fsombrax, nodo.y - fsombray, 0.0f);
+        GLDraw::End();
 
-        glBegin(GL_LINE_STRIP);
-        glVertex3f(nodo.x + fsombrax, nodo.y - radioCruz - fsombray, 0.0f);
-        glVertex3f(nodo.x + fsombrax, nodo.y - fsombray, 0.0f);
-        glEnd();
-        glBegin(GL_LINE_STRIP);
-        glVertex3f(nodo.x + fsombrax, nodo.y + radioCruz - fsombray, 0.0f);
-        glVertex3f(nodo.x + fsombrax, nodo.y - fsombray, 0.0f);
-        glEnd();
+        GLDraw::Begin(GL_LINE_STRIP);
+        GLDraw::Vertex3f(nodo.x + fsombrax, nodo.y - radioCruz - fsombray, 0.0f);
+        GLDraw::Vertex3f(nodo.x + fsombrax, nodo.y - fsombray, 0.0f);
+        GLDraw::End();
+        GLDraw::Begin(GL_LINE_STRIP);
+        GLDraw::Vertex3f(nodo.x + fsombrax, nodo.y + radioCruz - fsombray, 0.0f);
+        GLDraw::Vertex3f(nodo.x + fsombrax, nodo.y - fsombray, 0.0f);
+        GLDraw::End();
         if(rallado)
-                glDisable(GL_LINE_STIPPLE);
+                GLDraw::Disable(GL_LINE_STIPPLE);
 }
 
 void DibujaAspaInclinada(const GNC::GCS::Nodo& nodo, float radioCruz, bool rallado = false, float fsombrax = 0.0f, float fsombray = 0.0f)
 {
         // Cruz
         if(rallado) {
-                glEnable(GL_LINE_STIPPLE);
-                glLineStipple(3, 0xAAAA);
+                GLDraw::Enable(GL_LINE_STIPPLE);
+                GLDraw::LineStipple(3, 0xAAAA);
         }
-        glBegin(GL_LINE_STRIP);
-        glVertex3f(nodo.x + fsombrax, nodo.y - fsombray, 0.0f);
-        glVertex3f(nodo.x + radioCruz + fsombrax, nodo.y - radioCruz - fsombray, 0.0f);
-        glEnd();
-        glBegin(GL_LINE_STRIP);
-        glVertex3f(nodo.x + fsombrax, nodo.y - fsombray, 0.0f);
-        glVertex3f(nodo.x + radioCruz + fsombrax, nodo.y + radioCruz - fsombray, 0.0f);
-        glEnd();
+        GLDraw::Begin(GL_LINE_STRIP);
+        GLDraw::Vertex3f(nodo.x + fsombrax, nodo.y - fsombray, 0.0f);
+        GLDraw::Vertex3f(nodo.x + radioCruz + fsombrax, nodo.y - radioCruz - fsombray, 0.0f);
+        GLDraw::End();
+        GLDraw::Begin(GL_LINE_STRIP);
+        GLDraw::Vertex3f(nodo.x + fsombrax, nodo.y - fsombray, 0.0f);
+        GLDraw::Vertex3f(nodo.x + radioCruz + fsombrax, nodo.y + radioCruz - fsombray, 0.0f);
+        GLDraw::End();
 
-        glBegin(GL_LINE_STRIP);
-        glVertex3f(nodo.x + fsombrax, nodo.y - fsombray, 0.0f);
-        glVertex3f(nodo.x - radioCruz + fsombrax, nodo.y + radioCruz - fsombray, 0.0f);
-        glEnd();
-        glBegin(GL_LINE_STRIP);
-        glVertex3f(nodo.x + fsombrax, nodo.y - fsombray, 0.0f);
-        glVertex3f(nodo.x - radioCruz + fsombrax, nodo.y - radioCruz - fsombray, 0.0f);
-        glEnd();
+        GLDraw::Begin(GL_LINE_STRIP);
+        GLDraw::Vertex3f(nodo.x + fsombrax, nodo.y - fsombray, 0.0f);
+        GLDraw::Vertex3f(nodo.x - radioCruz + fsombrax, nodo.y + radioCruz - fsombray, 0.0f);
+        GLDraw::End();
+        GLDraw::Begin(GL_LINE_STRIP);
+        GLDraw::Vertex3f(nodo.x + fsombrax, nodo.y - fsombray, 0.0f);
+        GLDraw::Vertex3f(nodo.x - radioCruz + fsombrax, nodo.y - radioCruz - fsombray, 0.0f);
+        GLDraw::End();
         if(rallado)
-                glDisable(GL_LINE_STIPPLE);
+                GLDraw::Disable(GL_LINE_STIPPLE);
 }
 
 void GNC::GCS::Widgets::WChromaComplejoBuilder::DibujarVarita(GNC::GCS::Contexto3D* c)
@@ -223,18 +226,18 @@ void GNC::GCS::Widgets::WChromaComplejoBuilder::DibujarVarita(GNC::GCS::Contexto
 
         wColorSombra.Aplicar();
 
-        glLineWidth(m_LineWidthProp);
+        GLDraw::LineWidth(m_LineWidthProp);
         // cruz
         DibujaAspa(m_Nodo, radioCruz,true,fsombrax,fsombray);
 
         //linea de la cruz 45 grados xa abajo
-        glBegin(GL_LINES);
-        glVertex3f(m_Nodo.x + fsombrax, m_Nodo.y - fsombray, 0.0f);
-        glVertex3f(m_Nodo.x + longitudLinea + fsombrax, m_Nodo.y + longitudLinea + fsombray, 0.0f);
-        glEnd();
+        GLDraw::Begin(GL_LINES);
+        GLDraw::Vertex3f(m_Nodo.x + fsombrax, m_Nodo.y - fsombray, 0.0f);
+        GLDraw::Vertex3f(m_Nodo.x + longitudLinea + fsombrax, m_Nodo.y + longitudLinea + fsombray, 0.0f);
+        GLDraw::End();
 
         // Cuerpo
-        glLineWidth(m_DraggingLineWidthProp);
+        GLDraw::LineWidth(m_DraggingLineWidthProp);
         wAplicarColor(m_Nodo.m_Iluminado, m_MouseDown, m_Nodo.m_Seleccionado);
 
         // Cruz
@@ -242,10 +245,10 @@ void GNC::GCS::Widgets::WChromaComplejoBuilder::DibujarVarita(GNC::GCS::Contexto
 
         //linea de la cruz 45 grados xa abajo
 
-        glBegin(GL_LINES);
-        glVertex3f(m_Nodo.x, m_Nodo.y, 0.0f);
-        glVertex3f(m_Nodo.x + longitudLinea, m_Nodo.y + longitudLinea, 0.0f);
-        glEnd();
+        GLDraw::Begin(GL_LINES);
+        GLDraw::Vertex3f(m_Nodo.x, m_Nodo.y, 0.0f);
+        GLDraw::Vertex3f(m_Nodo.x + longitudLinea, m_Nodo.y + longitudLinea, 0.0f);
+        GLDraw::End();
 }
 
 void GNC::GCS::Widgets::WChromaComplejoBuilder::Render(GNC::GCS::Contexto3D* c)
@@ -256,19 +259,19 @@ void GNC::GCS::Widgets::WChromaComplejoBuilder::Render(GNC::GCS::Contexto3D* c)
                 float radioCruz = WRADIO_CRUZ * escala.x;
 
                 //se pinta la linea:
-                glLineWidth(m_LineWidthProp);
+                GLDraw::LineWidth(m_LineWidthProp);
                 wAplicarColor(false, false, false);
-                glEnable(GL_LINE_STIPPLE);
-                glLineStipple(3, 0xAAAA);
-                glBegin(GL_LINE_STRIP);
+                GLDraw::Enable(GL_LINE_STIPPLE);
+                GLDraw::LineStipple(3, 0xAAAA);
+                GLDraw::Begin(GL_LINE_STRIP);
                 for (TListaNodos::iterator it = m_ListaNodos.begin(); it != m_ListaNodos.end(); ++it) {
-                        glVertex2d((*it).x, (*it).y);
+                        GLDraw::Vertex2d((*it).x, (*it).y);
                 }
-                glEnd();
-                glDisable(GL_LINE_STIPPLE);
+                GLDraw::End();
+                GLDraw::Disable(GL_LINE_STIPPLE);
 
                 wAplicarColor(true, false, true);
-                glLineWidth(m_LineWidthProp);
+                GLDraw::LineWidth(m_LineWidthProp);
                 //se pintan los nodos representativos
                 if(m_ListaNodos.size()<= (unsigned int)m_numeroPuntos) {
                         // Dibujo las aspas
@@ -382,23 +385,23 @@ void GNC::GCS::Widgets::WChromaComplejo::Render(GNC::GCS::Contexto3D* c)
 
         //se pinta la linea:
         wAplicarColor(false, false, false);
-        glLineWidth(m_LineWidthProp);
-        glEnable(GL_LINE_STIPPLE);
-        glLineStipple(3, 0xAAAA);
-        glBegin(GL_LINE_STRIP);
+        GLDraw::LineWidth(m_LineWidthProp);
+        GLDraw::Enable(GL_LINE_STIPPLE);
+        GLDraw::LineStipple(3, 0xAAAA);
+        GLDraw::Begin(GL_LINE_STRIP);
         for (TListaNodos::iterator it = m_ListaNodos.begin(); it != m_ListaNodos.end(); ++it) {
-                glVertex2d((*it).x, (*it).y);
+                GLDraw::Vertex2d((*it).x, (*it).y);
         }
-        glEnd();
-        glDisable(GL_LINE_STIPPLE);
+        GLDraw::End();
+        GLDraw::Disable(GL_LINE_STIPPLE);
 
         //se pintan los nodos representativos
         wAplicarColor(true, false, true);
-        glLineWidth(m_LineWidthProp);
+        GLDraw::LineWidth(m_LineWidthProp);
         TListaNodos puntos = GetListaNodos();
         for(TListaNodos::iterator it = puntos.begin(); it!=puntos.end(); ++it) {
                 // Dibujo los puntos
-                glPointSize(WIDGET_SIZE_PUNTO);
+                GLDraw::PointSize(WIDGET_SIZE_PUNTO);
                 DibujaAspaInclinada((*it),radioCruz);
         }
 }

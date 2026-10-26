@@ -30,6 +30,9 @@
 #endif
 #include <vtk_glew.h>
 #include <cairo/cairo.h>
+#include <vtk/gldraw.h>
+
+namespace GLDraw = GNC::GCS::GLDraw;
 
 //--------------------------------------------------------------------------------------------
 
@@ -146,11 +149,11 @@ void GNC::GCS::TexturaCairo::Cargar()
                 return;
         }
 
-        glEnable(GL_TEXTURE_2D);
+        GLDraw::Enable(GL_TEXTURE_2D);
 
-        //glHint(GL_TEXTURE_COMPRESSION_HINT, GL_FASTEST);
-        //glHint(GL_TEXTURE_COMPRESSION_HINT, GL_FASTEST);
-        //glHint(GL_TEXTURE_COMPRESSION_HINT, GL_DONT_CARE);
+        //GLDraw::Hint(GL_TEXTURE_COMPRESSION_HINT, GL_FASTEST);
+        //GLDraw::Hint(GL_TEXTURE_COMPRESSION_HINT, GL_FASTEST);
+        //GLDraw::Hint(GL_TEXTURE_COMPRESSION_HINT, GL_DONT_CARE);
 
         glGenTextures(1, &idTextura);
 
@@ -169,13 +172,13 @@ void GNC::GCS::TexturaCairo::Cargar()
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, anchoPOT, altoPOT, 0, GL_RGBA, GL_UNSIGNED_BYTE, pPixelData);
 
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+        GLDraw::TexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
-        glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
+        GLDraw::Hint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
 
         glBindTexture(GL_TEXTURE_2D, 0);
 
-        glDisable(GL_TEXTURE_2D);
+        GLDraw::Disable(GL_TEXTURE_2D);
         texturaCargada = true;
         texturaModificada = false;
         //std::cout << "Textura cargada: " << ancho << "x" << alto << std::endl;
@@ -190,13 +193,13 @@ void GNC::GCS::TexturaCairo::Descargar()
                 return;
         }
 
-        glEnable(GL_TEXTURE_2D);
+        GLDraw::Enable(GL_TEXTURE_2D);
 
         GTRACE("Textura descargada: " << ancho << "x" << alto << ", " << idTextura);
 
         glDeleteTextures(1, &idTextura);
 
-        glDisable(GL_TEXTURE_2D);
+        GLDraw::Disable(GL_TEXTURE_2D);
 
         idTextura = (unsigned int)-1;
 
@@ -214,7 +217,7 @@ void GNC::GCS::TexturaCairo::Actualizar()
                 return;
         }
 
-        glEnable(GL_TEXTURE_2D);
+        GLDraw::Enable(GL_TEXTURE_2D);
 
         if (m_Interpolar) {
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -227,17 +230,17 @@ void GNC::GCS::TexturaCairo::Actualizar()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
 
-        //glHint(GL_TEXTURE_COMPRESSION_HINT, GL_FASTEST);
+        //GLDraw::Hint(GL_TEXTURE_COMPRESSION_HINT, GL_FASTEST);
         glBindTexture(GL_TEXTURE_2D, idTextura);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, anchoPOT, altoPOT, GL_RGBA, GL_UNSIGNED_BYTE, pPixelData);
 
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+        GLDraw::TexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
-        glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
+        GLDraw::Hint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
 
         glBindTexture(GL_TEXTURE_2D, 0);
 
-        glDisable(GL_TEXTURE_2D);
+        GLDraw::Disable(GL_TEXTURE_2D);
 
         texturaModificada = false;
 }
@@ -250,13 +253,13 @@ void GNC::GCS::TexturaCairo::Render(const GNC::GCS::Vector* const quad, bool fli
          *  q0   q1
          * */
 
-        glEnable(GL_TEXTURE_2D);
+        GLDraw::Enable(GL_TEXTURE_2D);
 
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        GLDraw::Color4f(1.0f, 1.0f, 1.0f, 1.0f);
         glBindTexture(GL_TEXTURE_2D, idTextura);
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-        glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
-        glBegin(GL_QUADS);
+        GLDraw::TexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+        GLDraw::Hint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
+        GLDraw::Begin(GL_QUADS);
 
         if (flipVertical) {
                 if (flipHorizontal) { // Se actua como si no se hiciese flipH
@@ -264,34 +267,34 @@ void GNC::GCS::TexturaCairo::Render(const GNC::GCS::Vector* const quad, bool fli
 
                         if (rotacionCamara != 0.0 ) {}
 
-                        glTexCoord2d(0.0f, 0.0f);
-                        glVertex2d(quad[2].x, quad[2].y);
+                        GLDraw::TexCoord2d(0.0f, 0.0f);
+                        GLDraw::Vertex2d(quad[2].x, quad[2].y);
 
-                        glTexCoord2d(trel.x,  0);
-                        glVertex2d(quad[3].x, quad[3].y);
+                        GLDraw::TexCoord2d(trel.x,  0);
+                        GLDraw::Vertex2d(quad[3].x, quad[3].y);
 
-                        glTexCoord2d(trel.x, trel.y);
-                        glVertex2d(quad[0].x, quad[0].y);
+                        GLDraw::TexCoord2d(trel.x, trel.y);
+                        GLDraw::Vertex2d(quad[0].x, quad[0].y);
 
-                        glTexCoord2d(0.0f, trel.y);
-                        glVertex2d(quad[1].x, quad[1].y);
+                        GLDraw::TexCoord2d(0.0f, trel.y);
+                        GLDraw::Vertex2d(quad[1].x, quad[1].y);
                 } else {
                         //std::cout << "Render flipV & !flipH" << std::endl;
 
                         if (rotacionCamara != 0.0 ) {}
 
                         // Se actua como si se hiciese flipH
-                        glTexCoord2d(0.0f, 0.0f);
-                        glVertex2d(quad[3].x, quad[3].y);
+                        GLDraw::TexCoord2d(0.0f, 0.0f);
+                        GLDraw::Vertex2d(quad[3].x, quad[3].y);
 
-                        glTexCoord2d(trel.x,  0);
-                        glVertex2d(quad[2].x, quad[2].y);
+                        GLDraw::TexCoord2d(trel.x,  0);
+                        GLDraw::Vertex2d(quad[2].x, quad[2].y);
 
-                        glTexCoord2d(trel.x, trel.y);
-                        glVertex2d(quad[1].x, quad[1].y);
+                        GLDraw::TexCoord2d(trel.x, trel.y);
+                        GLDraw::Vertex2d(quad[1].x, quad[1].y);
 
-                        glTexCoord2d(0.0f, trel.y);
-                        glVertex2d(quad[0].x, quad[0].y);
+                        GLDraw::TexCoord2d(0.0f, trel.y);
+                        GLDraw::Vertex2d(quad[0].x, quad[0].y);
 
                 }
         } else {
@@ -300,40 +303,40 @@ void GNC::GCS::TexturaCairo::Render(const GNC::GCS::Vector* const quad, bool fli
 
                         if (rotacionCamara != 0.0 ) {}
 
-                        glTexCoord2d(0.0f, 0.0f);
-                        glVertex2d(quad[1].x, quad[1].y);
+                        GLDraw::TexCoord2d(0.0f, 0.0f);
+                        GLDraw::Vertex2d(quad[1].x, quad[1].y);
 
-                        glTexCoord2d(trel.x,  0);
-                        glVertex2d(quad[0].x, quad[0].y);
+                        GLDraw::TexCoord2d(trel.x,  0);
+                        GLDraw::Vertex2d(quad[0].x, quad[0].y);
 
-                        glTexCoord2d(trel.x, trel.y);
-                        glVertex2d(quad[3].x, quad[3].y);
+                        GLDraw::TexCoord2d(trel.x, trel.y);
+                        GLDraw::Vertex2d(quad[3].x, quad[3].y);
 
-                        glTexCoord2d(0.0f, trel.y);
-                        glVertex2d(quad[2].x, quad[2].y);
+                        GLDraw::TexCoord2d(0.0f, trel.y);
+                        GLDraw::Vertex2d(quad[2].x, quad[2].y);
                 } else {
                         //std::cout << "Render !flipV & !flipH" << std::endl;
 
                         if (rotacionCamara != 0.0 ) {}
 
-                        glTexCoord2d(0.0f, 0.0f);
-                        glVertex2d(quad[0].x, quad[0].y);
+                        GLDraw::TexCoord2d(0.0f, 0.0f);
+                        GLDraw::Vertex2d(quad[0].x, quad[0].y);
 
-                        glTexCoord2d(trel.x,  0);
-                        glVertex2d(quad[1].x, quad[1].y);
+                        GLDraw::TexCoord2d(trel.x,  0);
+                        GLDraw::Vertex2d(quad[1].x, quad[1].y);
 
-                        glTexCoord2d(trel.x, trel.y);
-                        glVertex2d(quad[2].x, quad[2].y);
+                        GLDraw::TexCoord2d(trel.x, trel.y);
+                        GLDraw::Vertex2d(quad[2].x, quad[2].y);
 
-                        glTexCoord2d(0.0f, trel.y);
-                        glVertex2d(quad[3].x, quad[3].y);
+                        GLDraw::TexCoord2d(0.0f, trel.y);
+                        GLDraw::Vertex2d(quad[3].x, quad[3].y);
                 }
         }
 
-        glEnd();
+        GLDraw::End();
 
         glBindTexture(GL_TEXTURE_2D, 0);
-        glDisable(GL_TEXTURE_2D);
+        GLDraw::Disable(GL_TEXTURE_2D);
 }
 
 
@@ -346,32 +349,32 @@ void GNC::GCS::TexturaCairo::Render2D(const GNC::GCS::Vector* const quad)
          *  q0   q1
          * */
 
-        glEnable(GL_TEXTURE_2D);
+        GLDraw::Enable(GL_TEXTURE_2D);
 
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        GLDraw::Color4f(1.0f, 1.0f, 1.0f, 1.0f);
         glBindTexture(GL_TEXTURE_2D, idTextura);
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-        glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
+        GLDraw::TexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+        GLDraw::Hint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
 
-        glBegin(GL_QUADS);
+        GLDraw::Begin(GL_QUADS);
 
-        glTexCoord2d(0.0f, 0.0f);
-        glVertex2d(quad[0].x, quad[0].y);
+        GLDraw::TexCoord2d(0.0f, 0.0f);
+        GLDraw::Vertex2d(quad[0].x, quad[0].y);
 
-        glTexCoord2d(1.0,  0);
-        glVertex2d(quad[1].x, quad[1].y);
+        GLDraw::TexCoord2d(1.0,  0);
+        GLDraw::Vertex2d(quad[1].x, quad[1].y);
 
-        glTexCoord2d(1.0, 1.0);
-        glVertex2d(quad[2].x, quad[2].y);
+        GLDraw::TexCoord2d(1.0, 1.0);
+        GLDraw::Vertex2d(quad[2].x, quad[2].y);
 
-        glTexCoord2d(0.0f, 1.0);
-        glVertex2d(quad[3].x, quad[3].y);
+        GLDraw::TexCoord2d(0.0f, 1.0);
+        GLDraw::Vertex2d(quad[3].x, quad[3].y);
 
-        glEnd();
+        GLDraw::End();
 
         glBindTexture(GL_TEXTURE_2D, 0);
 
-        glDisable(GL_TEXTURE_2D);
+        GLDraw::Disable(GL_TEXTURE_2D);
 
 }
 
@@ -409,52 +412,52 @@ void GNC::GCS::TexturaCairo::Render(GNC::GCS::Contexto3D* c, const GNC::GCS::Vec
         quad[3].x = quad[0].x;
         quad[3].y = quad[2].y;
 
-        glEnable(GL_TEXTURE_2D);
+        GLDraw::Enable(GL_TEXTURE_2D);
 
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        GLDraw::Color4f(1.0f, 1.0f, 1.0f, 1.0f);
         glBindTexture(GL_TEXTURE_2D, idTextura);
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-        glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
+        GLDraw::TexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+        GLDraw::Hint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
 
         if (ajustarAPixeslPantalla) {
                 AjustarAPixelsPantalla(c, quad, 4);
         }
 
-        glBegin(GL_QUADS);
+        GLDraw::Begin(GL_QUADS);
         if (flipVertical) {
                 if (flipHorizontal) { // Se actua como si no se hiciese flipH
                         //std::cout << "Render2 flipV & flipH" << std::endl;
 
                         if (rotacionCamara != 0.0 ) {}
 
-                        glTexCoord2d(0.0f, 0.0f);
-                        glVertex2d(quad[2].x, quad[2].y);
+                        GLDraw::TexCoord2d(0.0f, 0.0f);
+                        GLDraw::Vertex2d(quad[2].x, quad[2].y);
 
-                        glTexCoord2d(1.0,  0);
-                        glVertex2d(quad[3].x, quad[3].y);
+                        GLDraw::TexCoord2d(1.0,  0);
+                        GLDraw::Vertex2d(quad[3].x, quad[3].y);
 
-                        glTexCoord2d(1.0, 1.0);
-                        glVertex2d(quad[0].x, quad[0].y);
+                        GLDraw::TexCoord2d(1.0, 1.0);
+                        GLDraw::Vertex2d(quad[0].x, quad[0].y);
 
-                        glTexCoord2d(0.0f, 1.0);
-                        glVertex2d(quad[1].x, quad[1].y);
+                        GLDraw::TexCoord2d(0.0f, 1.0);
+                        GLDraw::Vertex2d(quad[1].x, quad[1].y);
                 } else {
                         //std::cout << "Render2 flipV & !flipH" << std::endl;
 
                         if (rotacionCamara != 0.0 ) {}
 
                         // Se actua como si se hiciese flipH
-                        glTexCoord2d(0.0f, 0.0f);
-                        glVertex2d(quad[3].x, quad[3].y);
+                        GLDraw::TexCoord2d(0.0f, 0.0f);
+                        GLDraw::Vertex2d(quad[3].x, quad[3].y);
 
-                        glTexCoord2d(1.0,  0);
-                        glVertex2d(quad[2].x, quad[2].y);
+                        GLDraw::TexCoord2d(1.0,  0);
+                        GLDraw::Vertex2d(quad[2].x, quad[2].y);
 
-                        glTexCoord2d(1.0, 1.0);
-                        glVertex2d(quad[1].x, quad[1].y);
+                        GLDraw::TexCoord2d(1.0, 1.0);
+                        GLDraw::Vertex2d(quad[1].x, quad[1].y);
 
-                        glTexCoord2d(0.0f, 1.0);
-                        glVertex2d(quad[0].x, quad[0].y);
+                        GLDraw::TexCoord2d(0.0f, 1.0);
+                        GLDraw::Vertex2d(quad[0].x, quad[0].y);
 
                 }
         } else {
@@ -463,47 +466,47 @@ void GNC::GCS::TexturaCairo::Render(GNC::GCS::Contexto3D* c, const GNC::GCS::Vec
 
                         if (rotacionCamara != 0.0 ) {}
 
-                        glTexCoord2d(0.0f, 0.0f);
-                        glVertex2d(quad[1].x, quad[1].y);
+                        GLDraw::TexCoord2d(0.0f, 0.0f);
+                        GLDraw::Vertex2d(quad[1].x, quad[1].y);
 
-                        glTexCoord2d(1.0,  0);
-                        glVertex2d(quad[0].x, quad[0].y);
+                        GLDraw::TexCoord2d(1.0,  0);
+                        GLDraw::Vertex2d(quad[0].x, quad[0].y);
 
-                        glTexCoord2d(1.0, 1.0);
-                        glVertex2d(quad[3].x, quad[3].y);
+                        GLDraw::TexCoord2d(1.0, 1.0);
+                        GLDraw::Vertex2d(quad[3].x, quad[3].y);
 
-                        glTexCoord2d(0.0f, 1.0);
-                        glVertex2d(quad[2].x, quad[2].y);
+                        GLDraw::TexCoord2d(0.0f, 1.0);
+                        GLDraw::Vertex2d(quad[2].x, quad[2].y);
                 } else {
                         //std::cout << "Render2 !flipV & !flipH" << std::endl;
 
                         if (rotacionCamara != 0.0 ) {}
 
-                        glTexCoord2d(0.0f, 0.0f);
-                        glVertex2d(quad[0].x, quad[0].y);
+                        GLDraw::TexCoord2d(0.0f, 0.0f);
+                        GLDraw::Vertex2d(quad[0].x, quad[0].y);
 
-                        glTexCoord2d(1.0,  0);
-                        glVertex2d(quad[1].x, quad[1].y);
+                        GLDraw::TexCoord2d(1.0,  0);
+                        GLDraw::Vertex2d(quad[1].x, quad[1].y);
 
-                        glTexCoord2d(1.0, 1.0);
-                        glVertex2d(quad[2].x, quad[2].y);
+                        GLDraw::TexCoord2d(1.0, 1.0);
+                        GLDraw::Vertex2d(quad[2].x, quad[2].y);
 
-                        glTexCoord2d(0.0f, 1.0);
-                        glVertex2d(quad[3].x, quad[3].y);
+                        GLDraw::TexCoord2d(0.0f, 1.0);
+                        GLDraw::Vertex2d(quad[3].x, quad[3].y);
                 }
         }
-        glEnd();
+        GLDraw::End();
 
         glBindTexture(GL_TEXTURE_2D, 0);
 
-        glDisable(GL_TEXTURE_2D);
+        GLDraw::Disable(GL_TEXTURE_2D);
         /*
-        	glColor3f(1.0f, 0.0f, 0.0f);
-        	glLineWidth(2.0f);
-        	glBegin(GL_LINES);
-        	glVertex2dv(quad[0]);
-        	glVertex2dv(quad[2]);
-        	glEnd();
+        	GLDraw::Color3f(1.0f, 0.0f, 0.0f);
+        	GLDraw::LineWidth(2.0f);
+        	GLDraw::Begin(GL_LINES);
+        	GLDraw::Vertex2dv(quad[0]);
+        	GLDraw::Vertex2dv(quad[2]);
+        	GLDraw::End();
         */
 }
 

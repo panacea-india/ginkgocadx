@@ -36,6 +36,9 @@
 #include <cairo/cairo.h>
 #include "openglhelper.h"
 #include <wx/xml/xml.h>
+#include <vtk/gldraw.h>
+
+namespace GLDraw = GNC::GCS::GLDraw;
 
 //region "Implementacion de WAnguloBuilder"
 
@@ -201,26 +204,26 @@ void GNC::GCS::Widgets::WAnguloBuilder::Render(GNC::GCS::Contexto3D* c)
         }
         if (c->GetRenderer()->GetVID() == m_pAnguloTemp->GetVID()) {
 
-                glLineWidth(m_LineWidthProp);
+                GLDraw::LineWidth(m_LineWidthProp);
 
                 if (m_Modo == MA_Normal) {
                         if (m_NodoActual < 2) {
-                                glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
-                                glBegin(GL_LINE_STRIP);
-                                glVertex2d(m_pAnguloTemp->m_Nodos[0].x, m_pAnguloTemp->m_Nodos[0].y);
-                                glVertex2d(m_pAnguloTemp->m_Nodos[1].x, m_pAnguloTemp->m_Nodos[1].y);
-                                glEnd();
+                                GLDraw::Color4f(1.0f, 0.0f, 0.0f, 1.0f);
+                                GLDraw::Begin(GL_LINE_STRIP);
+                                GLDraw::Vertex2d(m_pAnguloTemp->m_Nodos[0].x, m_pAnguloTemp->m_Nodos[0].y);
+                                GLDraw::Vertex2d(m_pAnguloTemp->m_Nodos[1].x, m_pAnguloTemp->m_Nodos[1].y);
+                                GLDraw::End();
                         } else {
                                 m_pAnguloTemp->Render(c);
                         }
 
                 } else if (m_Modo == MA_Cobb) {
                         if (m_NodoActual < 3) {
-                                glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
-                                glBegin(GL_LINES);
-                                glVertex2d(m_pAnguloTemp->m_Nodos[0].x, m_pAnguloTemp->m_Nodos[0].y);
-                                glVertex2d(m_pAnguloTemp->m_Nodos[1].x, m_pAnguloTemp->m_Nodos[1].y);
-                                glEnd();
+                                GLDraw::Color4f(1.0f, 0.0f, 0.0f, 1.0f);
+                                GLDraw::Begin(GL_LINES);
+                                GLDraw::Vertex2d(m_pAnguloTemp->m_Nodos[0].x, m_pAnguloTemp->m_Nodos[0].y);
+                                GLDraw::Vertex2d(m_pAnguloTemp->m_Nodos[1].x, m_pAnguloTemp->m_Nodos[1].y);
+                                GLDraw::End();
                         } else {
                                 m_pAnguloTemp->Render(c);
                         }
@@ -655,15 +658,15 @@ void GNC::GCS::Widgets::WAngulo::RenderNormal(GNC::GCS::Contexto3D* c)
                 fsombray = WIDGET_OFFSET_Y_SOMBRA * escala.y;
         }
 
-        glLineWidth(m_LineWidthProp);
+        GLDraw::LineWidth(m_LineWidthProp);
 
         // Sombra cuerpo
         wColorSombra.Aplicar();
-        glBegin(GL_LINE_STRIP);
-        glVertex2d(m_Nodos[0].x + fsombrax, m_Nodos[0].y - fsombray);
-        glVertex2d(m_Nodos[1].x + fsombrax, m_Nodos[1].y - fsombray);
-        glVertex2d(m_Nodos[2].x + fsombrax, m_Nodos[2].y - fsombray);
-        glEnd();
+        GLDraw::Begin(GL_LINE_STRIP);
+        GLDraw::Vertex2d(m_Nodos[0].x + fsombrax, m_Nodos[0].y - fsombray);
+        GLDraw::Vertex2d(m_Nodos[1].x + fsombrax, m_Nodos[1].y - fsombray);
+        GLDraw::Vertex2d(m_Nodos[2].x + fsombrax, m_Nodos[2].y - fsombray);
+        GLDraw::End();
 
         // Sombra puntas de flecha
         float anguloPunta = M_PI_4 / 2.0f;
@@ -674,22 +677,22 @@ void GNC::GCS::Widgets::WAngulo::RenderNormal(GNC::GCS::Contexto3D* c)
         TVector puntaB0 = m_Nodos[2] + ((v2/escala).RotacionSobreZ(M_PI+anguloPunta).Normalizar() * escala * 15.0f);
         TVector puntaB1 = m_Nodos[2] + ((v2/escala).RotacionSobreZ(M_PI-anguloPunta).Normalizar() * escala * 15.0f);
 
-        glBegin(GL_LINE_STRIP);
-        glVertex2d(puntaA0.x + fsombrax, puntaA0.y - fsombray);
-        glVertex2d(m_Nodos[0].x + fsombrax, m_Nodos[0].y - fsombray);
-        glVertex2d(puntaA1.x + fsombrax, puntaA1.y - fsombray);
-        glEnd();
+        GLDraw::Begin(GL_LINE_STRIP);
+        GLDraw::Vertex2d(puntaA0.x + fsombrax, puntaA0.y - fsombray);
+        GLDraw::Vertex2d(m_Nodos[0].x + fsombrax, m_Nodos[0].y - fsombray);
+        GLDraw::Vertex2d(puntaA1.x + fsombrax, puntaA1.y - fsombray);
+        GLDraw::End();
 
-        glBegin(GL_LINE_STRIP);
-        glVertex2d(puntaB0.x + fsombrax, puntaB0.y - fsombray);
-        glVertex2d(m_Nodos[2].x + fsombrax, m_Nodos[2].y - fsombray);
-        glVertex2d(puntaB1.x + fsombrax, puntaB1.y - fsombray);
-        glEnd();
+        GLDraw::Begin(GL_LINE_STRIP);
+        GLDraw::Vertex2d(puntaB0.x + fsombrax, puntaB0.y - fsombray);
+        GLDraw::Vertex2d(m_Nodos[2].x + fsombrax, m_Nodos[2].y - fsombray);
+        GLDraw::Vertex2d(puntaB1.x + fsombrax, puntaB1.y - fsombray);
+        GLDraw::End();
 
         // sombra punto origen
-        glBegin(GL_POINTS);
-        glVertex2d(m_Nodos[1].x + fsombrax, m_Nodos[1].y - fsombray);
-        glEnd();
+        GLDraw::Begin(GL_POINTS);
+        GLDraw::Vertex2d(m_Nodos[1].x + fsombrax, m_Nodos[1].y - fsombray);
+        GLDraw::End();
 
         TMatriz mRot;
         mRot = TMatriz::MatrizRotacion(m_Angulo/60.0f);
@@ -704,42 +707,42 @@ void GNC::GCS::Widgets::WAngulo::RenderNormal(GNC::GCS::Contexto3D* c)
 
         // Arco
         wColorAngulo.Aplicar();
-        glBegin(GL_LINE_STRIP);
+        GLDraw::Begin(GL_LINE_STRIP);
         for (int i = 0; i < 60; ++i) {
                 if ( i == 30) {
                         puntoTexto = m_Nodos[1] + va;
                 }
-                glVertex2d(m_Nodos[1].x + va.x, m_Nodos[1].y + va.y);
+                GLDraw::Vertex2d(m_Nodos[1].x + va.x, m_Nodos[1].y + va.y);
                 va /= escala;
                 //all va vector has the same norma unscaled
                 va = mRot.ProductoMatricial(va).Normalizar() * normaVa;
                 va *= escala;
         }
-        glVertex2d(m_Nodos[1].x + vb.x, m_Nodos[1].y + vb.y);
-        glEnd();
+        GLDraw::Vertex2d(m_Nodos[1].x + vb.x, m_Nodos[1].y + vb.y);
+        GLDraw::End();
 
         // Arco interior
         va = ((v1/escala).Normalizado() * std::min(n1, n2))*escala * 0.3f;
         wColorAnguloInterior.Aplicar();
 
-        glBegin(GL_TRIANGLE_FAN);
-        glVertex2d(m_Nodos[1].x, m_Nodos[1].y);
+        GLDraw::Begin(GL_TRIANGLE_FAN);
+        GLDraw::Vertex2d(m_Nodos[1].x, m_Nodos[1].y);
         for (int i = 0; i < 60; ++i) {
-                glVertex2d(m_Nodos[1].x + va.x, m_Nodos[1].y + va.y);
+                GLDraw::Vertex2d(m_Nodos[1].x + va.x, m_Nodos[1].y + va.y);
                 va /= escala;
                 va = mRot.ProductoMatricial(va).Normalizar() * normaVa;
                 va *= escala;
         }
-        glVertex2d(m_Nodos[1].x + vb.x, m_Nodos[1].y + vb.y);
-        glEnd();
+        GLDraw::Vertex2d(m_Nodos[1].x + vb.x, m_Nodos[1].y + vb.y);
+        GLDraw::End();
 
         // Cuerpo
         wAplicarColor(m_Iluminado, m_MouseDown, m_Seleccionado);
-        glBegin(GL_LINE_STRIP);
-        glVertex2d(m_Nodos[0].x, m_Nodos[0].y);
-        glVertex2d(m_Nodos[1].x, m_Nodos[1].y);
-        glVertex2d(m_Nodos[2].x, m_Nodos[2].y);
-        glEnd();
+        GLDraw::Begin(GL_LINE_STRIP);
+        GLDraw::Vertex2d(m_Nodos[0].x, m_Nodos[0].y);
+        GLDraw::Vertex2d(m_Nodos[1].x, m_Nodos[1].y);
+        GLDraw::Vertex2d(m_Nodos[2].x, m_Nodos[2].y);
+        GLDraw::End();
 
 
         // Dibujo highlights puntos activos
@@ -751,31 +754,31 @@ void GNC::GCS::Widgets::WAngulo::RenderNormal(GNC::GCS::Contexto3D* c)
 
         // Nodos
         if (m_Seleccionado && m_MouseDown)
-                glPointSize(WIDGET_SIZE_PUNTO * WIDGET_INCREMENTO_DETALLE_SELECCIONADO);
+                GLDraw::PointSize(WIDGET_SIZE_PUNTO * WIDGET_INCREMENTO_DETALLE_SELECCIONADO);
         else
-                glPointSize(WIDGET_SIZE_PUNTO);
+                GLDraw::PointSize(WIDGET_SIZE_PUNTO);
 
 
         // Puntas de flecha
         wAplicarColor(m_Iluminado || m_Nodos[0].m_Iluminado, m_MouseDown, m_Seleccionado);
-        glBegin(GL_LINE_STRIP);
-        glVertex2d(puntaA0.x, puntaA0.y);
-        glVertex2d(m_Nodos[0].x, m_Nodos[0].y);
-        glVertex2d(puntaA1.x, puntaA1.y);
-        glEnd();
+        GLDraw::Begin(GL_LINE_STRIP);
+        GLDraw::Vertex2d(puntaA0.x, puntaA0.y);
+        GLDraw::Vertex2d(m_Nodos[0].x, m_Nodos[0].y);
+        GLDraw::Vertex2d(puntaA1.x, puntaA1.y);
+        GLDraw::End();
 
         wAplicarColor(m_Iluminado || m_Nodos[2].m_Iluminado, m_MouseDown, m_Seleccionado);
-        glBegin(GL_LINE_STRIP);
-        glVertex2d(puntaB0.x, puntaB0.y);
-        glVertex2d(m_Nodos[2].x, m_Nodos[2].y);
-        glVertex2d(puntaB1.x, puntaB1.y);
-        glEnd();
+        GLDraw::Begin(GL_LINE_STRIP);
+        GLDraw::Vertex2d(puntaB0.x, puntaB0.y);
+        GLDraw::Vertex2d(m_Nodos[2].x, m_Nodos[2].y);
+        GLDraw::Vertex2d(puntaB1.x, puntaB1.y);
+        GLDraw::End();
 
 
         wAplicarColor(m_Iluminado || m_Nodos[1].m_Iluminado, m_MouseDown, m_Seleccionado);
-        glBegin(GL_POINTS);
-        glVertex2d(m_Nodos[1].x, m_Nodos[1].y);
-        glEnd();
+        GLDraw::Begin(GL_POINTS);
+        GLDraw::Vertex2d(m_Nodos[1].x, m_Nodos[1].y);
+        GLDraw::End();
 }
 
 void GNC::GCS::Widgets::WAngulo::RenderCobb(GNC::GCS::Contexto3D* c)
@@ -802,26 +805,26 @@ void GNC::GCS::Widgets::WAngulo::RenderCobb(GNC::GCS::Contexto3D* c)
                 fsombray = WIDGET_OFFSET_Y_SOMBRA * escala.y;
         }
 
-        glLineWidth(m_LineWidthProp);
+        GLDraw::LineWidth(m_LineWidthProp);
 
         // Sombra
         wColorSombra.Aplicar();
 
         // Sombra cuerpo
-        glBegin(GL_LINES);
-        glVertex2d(m_Nodos[0].x + fsombrax, m_Nodos[0].y - fsombray);
-        glVertex2d(m_Nodos[1].x + fsombrax, m_Nodos[1].y - fsombray);
-        glVertex2d(m_Nodos[2].x + fsombrax, m_Nodos[2].y - fsombray);
-        glVertex2d(m_Nodos[3].x + fsombrax, m_Nodos[3].y - fsombray);
-        glEnd();
+        GLDraw::Begin(GL_LINES);
+        GLDraw::Vertex2d(m_Nodos[0].x + fsombrax, m_Nodos[0].y - fsombray);
+        GLDraw::Vertex2d(m_Nodos[1].x + fsombrax, m_Nodos[1].y - fsombray);
+        GLDraw::Vertex2d(m_Nodos[2].x + fsombrax, m_Nodos[2].y - fsombray);
+        GLDraw::Vertex2d(m_Nodos[3].x + fsombrax, m_Nodos[3].y - fsombray);
+        GLDraw::End();
 
         // Sombra puntos origen 0 y 2
         wColorSombra.Aplicar();
-        glPointSize(WIDGET_SIZE_PUNTO);
-        glBegin(GL_POINTS);
-        glVertex2d(m_Nodos[0].x + fsombrax, m_Nodos[0].y - fsombray);
-        glVertex2d(m_Nodos[2].x + fsombrax, m_Nodos[2].y - fsombray);
-        glEnd();
+        GLDraw::PointSize(WIDGET_SIZE_PUNTO);
+        GLDraw::Begin(GL_POINTS);
+        GLDraw::Vertex2d(m_Nodos[0].x + fsombrax, m_Nodos[0].y - fsombray);
+        GLDraw::Vertex2d(m_Nodos[2].x + fsombrax, m_Nodos[2].y - fsombray);
+        GLDraw::End();
 
 
         // Sombra puntas de flecha
@@ -833,17 +836,17 @@ void GNC::GCS::Widgets::WAngulo::RenderCobb(GNC::GCS::Contexto3D* c)
         TVector puntaB0 = m_Nodos[3] + ((v2/escala).RotacionSobreZ(M_PI+anguloPunta).Normalizar() * escala * 15.0f);
         TVector puntaB1 = m_Nodos[3] + ((v2/escala).RotacionSobreZ(M_PI-anguloPunta).Normalizar() * escala * 15.0f);
 
-        glBegin(GL_LINE_STRIP);
-        glVertex2d(puntaA0.x + fsombrax, puntaA0.y - fsombray);
-        glVertex2d(m_Nodos[1].x + fsombrax, m_Nodos[1].y - fsombray);
-        glVertex2d(puntaA1.x + fsombrax, puntaA1.y - fsombray);
-        glEnd();
+        GLDraw::Begin(GL_LINE_STRIP);
+        GLDraw::Vertex2d(puntaA0.x + fsombrax, puntaA0.y - fsombray);
+        GLDraw::Vertex2d(m_Nodos[1].x + fsombrax, m_Nodos[1].y - fsombray);
+        GLDraw::Vertex2d(puntaA1.x + fsombrax, puntaA1.y - fsombray);
+        GLDraw::End();
 
-        glBegin(GL_LINE_STRIP);
-        glVertex2d(puntaB0.x + fsombrax, puntaB0.y - fsombray);
-        glVertex2d(m_Nodos[3].x + fsombrax, m_Nodos[3].y - fsombray);
-        glVertex2d(puntaB1.x + fsombrax, puntaB1.y - fsombray);
-        glEnd();
+        GLDraw::Begin(GL_LINE_STRIP);
+        GLDraw::Vertex2d(puntaB0.x + fsombrax, puntaB0.y - fsombray);
+        GLDraw::Vertex2d(m_Nodos[3].x + fsombrax, m_Nodos[3].y - fsombray);
+        GLDraw::Vertex2d(puntaB1.x + fsombrax, puntaB1.y - fsombray);
+        GLDraw::End();
 
         TVector puntoTexto;
 
@@ -855,23 +858,23 @@ void GNC::GCS::Widgets::WAngulo::RenderCobb(GNC::GCS::Contexto3D* c)
                 puntoTexto = p0.PuntoMedio(p1);
 
                 // Sombra de arco
-                glEnable(GL_LINE_STIPPLE);
-                glLineStipple(3, 0xAAAA);
+                GLDraw::Enable(GL_LINE_STIPPLE);
+                GLDraw::LineStipple(3, 0xAAAA);
                 wColorSombra.Aplicar();
-                glBegin(GL_LINES);
-                glVertex2d(p0.x, p0.y);
-                glVertex2d(p1.x, p1.y);
-                glEnd();
-                glDisable(GL_LINE_STIPPLE);
+                GLDraw::Begin(GL_LINES);
+                GLDraw::Vertex2d(p0.x, p0.y);
+                GLDraw::Vertex2d(p1.x, p1.y);
+                GLDraw::End();
+                GLDraw::Disable(GL_LINE_STIPPLE);
 
-                glEnable(GL_LINE_STIPPLE);
-                glLineStipple(3, 0xAAAA);
+                GLDraw::Enable(GL_LINE_STIPPLE);
+                GLDraw::LineStipple(3, 0xAAAA);
                 wColorAngulo.Aplicar();
-                glBegin(GL_LINES);
-                glVertex2d(p0.x, p0.y);
-                glVertex2d(p1.x, p1.y);
-                glEnd();
-                glDisable(GL_LINE_STIPPLE);
+                GLDraw::Begin(GL_LINES);
+                GLDraw::Vertex2d(p0.x, p0.y);
+                GLDraw::Vertex2d(p1.x, p1.y);
+                GLDraw::End();
+                GLDraw::Disable(GL_LINE_STIPPLE);
         }
 
         //arco
@@ -896,26 +899,26 @@ void GNC::GCS::Widgets::WAngulo::RenderCobb(GNC::GCS::Contexto3D* c)
         GNC::GCS::Vector tva = va;
         double normaVa = (va/escala).Norma2();
 
-        glBegin(GL_LINE_STRIP);
+        GLDraw::Begin(GL_LINE_STRIP);
         for (int i = 0; i < 60; ++i) {
-                glVertex2d(interseccion.x + tva.x + fsombrax, interseccion.y + tva.y + fsombray);
+                GLDraw::Vertex2d(interseccion.x + tva.x + fsombrax, interseccion.y + tva.y + fsombray);
                 tva /= escala;
                 tva = mRot.ProductoMatricial(tva).Normalizar() * normaVa;
                 tva *= escala;
         }
-        glEnd();
+        GLDraw::End();
 
         // Arco
         wColorAngulo.Aplicar();
 
-        glBegin(GL_LINE_STRIP);
+        GLDraw::Begin(GL_LINE_STRIP);
         for (int i = 0; i <= 60; ++i) {
-                glVertex2d(interseccion.x + va.x, interseccion.y + va.y);
+                GLDraw::Vertex2d(interseccion.x + va.x, interseccion.y + va.y);
                 va /= escala;
                 va = mRot.ProductoMatricial(va).Normalizar() * normaVa;
                 va *= escala;
         }
-        glEnd();
+        GLDraw::End();
 
 
         // Dibujo highlights puntos activos
@@ -928,63 +931,63 @@ void GNC::GCS::Widgets::WAngulo::RenderCobb(GNC::GCS::Contexto3D* c)
         // Cuerpo
         wAplicarColor(m_Iluminado, m_MouseDown, m_Seleccionado);
 
-        glBegin(GL_LINES);
-        glVertex2d(m_Nodos[0].x, m_Nodos[0].y);
-        glVertex2d(m_Nodos[1].x, m_Nodos[1].y);
-        glVertex2d(m_Nodos[2].x, m_Nodos[2].y);
-        glVertex2d(m_Nodos[3].x, m_Nodos[3].y);
-        glEnd();
+        GLDraw::Begin(GL_LINES);
+        GLDraw::Vertex2d(m_Nodos[0].x, m_Nodos[0].y);
+        GLDraw::Vertex2d(m_Nodos[1].x, m_Nodos[1].y);
+        GLDraw::Vertex2d(m_Nodos[2].x, m_Nodos[2].y);
+        GLDraw::Vertex2d(m_Nodos[3].x, m_Nodos[3].y);
+        GLDraw::End();
 
         // Puntas de flechas
         wAplicarColor(m_Iluminado || m_Nodos[1].m_Iluminado, m_MouseDown, m_Seleccionado);
-        glBegin(GL_LINE_STRIP);
-        glVertex2d(puntaA0.x, puntaA0.y);
-        glVertex2d(m_Nodos[1].x, m_Nodos[1].y);
-        glVertex2d(puntaA1.x, puntaA1.y);
-        glEnd();
+        GLDraw::Begin(GL_LINE_STRIP);
+        GLDraw::Vertex2d(puntaA0.x, puntaA0.y);
+        GLDraw::Vertex2d(m_Nodos[1].x, m_Nodos[1].y);
+        GLDraw::Vertex2d(puntaA1.x, puntaA1.y);
+        GLDraw::End();
 
         wAplicarColor(m_Iluminado || m_Nodos[3].m_Iluminado, m_MouseDown, m_Seleccionado);
-        glBegin(GL_LINE_STRIP);
-        glVertex2d(puntaB0.x, puntaB0.y);
-        glVertex2d(m_Nodos[3].x, m_Nodos[3].y);
-        glVertex2d(puntaB1.x, puntaB1.y);
-        glEnd();
+        GLDraw::Begin(GL_LINE_STRIP);
+        GLDraw::Vertex2d(puntaB0.x, puntaB0.y);
+        GLDraw::Vertex2d(m_Nodos[3].x, m_Nodos[3].y);
+        GLDraw::Vertex2d(puntaB1.x, puntaB1.y);
+        GLDraw::End();
 
         // Nodos
         if (m_Seleccionado && m_MouseDown)
-                glPointSize(WIDGET_SIZE_PUNTO * WIDGET_INCREMENTO_DETALLE_SELECCIONADO);
+                GLDraw::PointSize(WIDGET_SIZE_PUNTO * WIDGET_INCREMENTO_DETALLE_SELECCIONADO);
         else
-                glPointSize(WIDGET_SIZE_PUNTO);
+                GLDraw::PointSize(WIDGET_SIZE_PUNTO);
 
         wAplicarColor(m_Iluminado || m_Nodos[0].m_Iluminado, m_MouseDown, m_Seleccionado);
-        glBegin(GL_POINTS);
-        glVertex2d(m_Nodos[0].x, m_Nodos[0].y);
-        glEnd();
+        GLDraw::Begin(GL_POINTS);
+        GLDraw::Vertex2d(m_Nodos[0].x, m_Nodos[0].y);
+        GLDraw::End();
 
         wAplicarColor(m_Iluminado || m_Nodos[2].m_Iluminado, m_MouseDown, m_Seleccionado);
-        glBegin(GL_POINTS);
-        glVertex2d(m_Nodos[2].x, m_Nodos[2].y);
-        glEnd();
+        GLDraw::Begin(GL_POINTS);
+        GLDraw::Vertex2d(m_Nodos[2].x, m_Nodos[2].y);
+        GLDraw::End();
 
         // Interseccion
         interseccion = TVector::InterseccionEntreRectas(m_Nodos[0], m_Nodos[1], m_Nodos[2], m_Nodos[3]);
 
         if (m_MouseDown && m_Iluminado)
-                glPointSize(WIDGET_INCREMENTO_DETALLE_SELECCIONADO * WIDGET_SIZE_PUNTO);
+                GLDraw::PointSize(WIDGET_INCREMENTO_DETALLE_SELECCIONADO * WIDGET_SIZE_PUNTO);
         else
-                glPointSize(WIDGET_SIZE_PUNTO);
+                GLDraw::PointSize(WIDGET_SIZE_PUNTO);
 
         // Sombra
         wColorSombra.Aplicar();
-        glBegin(GL_POINTS);
-        glVertex2d(interseccion.x + fsombrax, interseccion.y - fsombray);
-        glEnd();
+        GLDraw::Begin(GL_POINTS);
+        GLDraw::Vertex2d(interseccion.x + fsombrax, interseccion.y - fsombray);
+        GLDraw::End();
 
         // Punto
         wColorAngulo.Aplicar();
-        glBegin(GL_POINTS);
-        glVertex2d(interseccion.x, interseccion.y);
-        glEnd();
+        GLDraw::Begin(GL_POINTS);
+        GLDraw::Vertex2d(interseccion.x, interseccion.y);
+        GLDraw::End();
 }
 
 void GNC::GCS::Widgets::WAngulo::Recalcular(GNC::GCS::IWidgetsRenderer* renderer, bool building)

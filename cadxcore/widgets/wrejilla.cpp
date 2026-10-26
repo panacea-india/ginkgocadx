@@ -33,6 +33,9 @@
 #include <vtkImageActor.h>
 #include <vtkPointData.h>
 #include <vtk/vtkginkgoimageviewer.h>
+#include <vtk/gldraw.h>
+
+namespace GLDraw = GNC::GCS::GLDraw;
 
 //region "Implementacion de WBuilder"
 
@@ -193,18 +196,18 @@ void GNC::GCS::Widgets::WRejilla::Render(GNC::GCS::Contexto3D* c)
         GNC::GCS::Vector escalaRejilla(m_EscalaX / spacing[0], m_EscalaY / spacing[1]);
         //
 
-        glPushAttrib(GL_ALL_ATTRIB_BITS);
+        GLDraw::PushAttrib(GL_ALL_ATTRIB_BITS);
 
         float viewport[4] = {0.0f, 0.0f, 0.0f, 0.0f}; // { x, y, ancho, alto }. Convenio de coordenadas: {x, y} == {bottom, left}, {ancho, alto} == {top, right}
-        glGetFloatv(GL_VIEWPORT, viewport);
-        glMatrixMode(GL_PROJECTION);
-        glPushMatrix();
-        glLoadIdentity();
-        glOrtho( 0, viewport[2] , viewport[3] , 0, -1, 1 );
+        GLDraw::GetFloatv(GL_VIEWPORT, viewport);
+        GLDraw::MatrixMode(GL_PROJECTION);
+        GLDraw::PushMatrix();
+        GLDraw::LoadIdentity();
+        GLDraw::Ortho( 0, viewport[2] , viewport[3] , 0, -1, 1 );
 
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glLoadIdentity();
+        GLDraw::MatrixMode(GL_MODELVIEW);
+        GLDraw::PushMatrix();
+        GLDraw::LoadIdentity();
 
 
         const GNC::GCS::Vector& relacionImagenPantalla = c->RelacionImagenPantalla();
@@ -227,33 +230,33 @@ void GNC::GCS::Widgets::WRejilla::Render(GNC::GCS::Contexto3D* c)
         rejillaCentrada[1] = rejillaCentrada[0] + rejillaPantalla;
 
         // Test
-        glLineWidth(0.5f);
-        glColor4f(0.0f, 0.75f, 0.0f, 0.75f);
+        GLDraw::LineWidth(0.5f);
+        GLDraw::Color4f(0.0f, 0.75f, 0.0f, 0.75f);
 
         int n;
         float p;
 
         p = rejillaCentrada[0].x;
         for ( n = 0; n <= (int) numCortes.x; p += escalaRejillaPantalla.x, ++n) {
-                glBegin(GL_LINES);
-                glVertex3f(p, 0.0f, 0.0f);
-                glVertex3f(p, viewPortPantalla.y, 0.0f);
-                glEnd();
+                GLDraw::Begin(GL_LINES);
+                GLDraw::Vertex3f(p, 0.0f, 0.0f);
+                GLDraw::Vertex3f(p, viewPortPantalla.y, 0.0f);
+                GLDraw::End();
         }
 
         p = rejillaCentrada[0].y;
         for (n = 0; n <= (int)numCortes.y; p += escalaRejillaPantalla.y, ++n) {
-                glBegin(GL_LINES);
-                glVertex3f(0.0f, p, 0.0f);
-                glVertex3f(viewPortPantalla.x, p, 0.0f);
-                glEnd();
+                GLDraw::Begin(GL_LINES);
+                GLDraw::Vertex3f(0.0f, p, 0.0f);
+                GLDraw::Vertex3f(viewPortPantalla.x, p, 0.0f);
+                GLDraw::End();
         }
 
-        glMatrixMode(GL_PROJECTION);
-        glPopMatrix();
-        glMatrixMode(GL_MODELVIEW);
-        glPopMatrix();
-        glPopAttrib();
+        GLDraw::MatrixMode(GL_PROJECTION);
+        GLDraw::PopMatrix();
+        GLDraw::MatrixMode(GL_MODELVIEW);
+        GLDraw::PopMatrix();
+        GLDraw::PopAttrib();
 
 }
 

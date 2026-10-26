@@ -51,6 +51,9 @@
 
 #include <vtkRenderer.h>
 #include <vtkCamera.h>
+#include <vtk/gldraw.h>
+
+namespace GLDraw = GNC::GCS::GLDraw;
 
 namespace GNC
 {
@@ -420,12 +423,12 @@ void GNC::GCS::Widgets::WTextBox::Render(GNC::GCS::Contexto3D* c)
 
 #if 0 // DEBUG
         wAplicarColor(true, false, false);
-        glBegin(GL_LINE_LOOP);
-        glVertex2d(m_Quad[0].x, m_Quad[0].y);
-        glVertex2d(m_Quad[1].x, m_Quad[1].y);
-        glVertex2d(m_Quad[2].x, m_Quad[2].y);
-        glVertex2d(m_Quad[3].x, m_Quad[3].y);
-        glEnd();
+        GLDraw::Begin(GL_LINE_LOOP);
+        GLDraw::Vertex2d(m_Quad[0].x, m_Quad[0].y);
+        GLDraw::Vertex2d(m_Quad[1].x, m_Quad[1].y);
+        GLDraw::Vertex2d(m_Quad[2].x, m_Quad[2].y);
+        GLDraw::Vertex2d(m_Quad[3].x, m_Quad[3].y);
+        GLDraw::End();
 #endif
 
 }

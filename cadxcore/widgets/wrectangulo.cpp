@@ -27,6 +27,9 @@
 #include <vtk_glew.h>
 #include <api/westilo.h>
 #include <cmath>
+#include <vtk/gldraw.h>
+
+namespace GLDraw = GNC::GCS::GLDraw;
 
 //region "Implementacion de WRectanguloBuilder"
 
@@ -122,18 +125,18 @@ void GNC::GCS::Widgets::WRectanguloBuilder::Render(GNC::GCS::Contexto3D* /*c*/)
 {
 
         if (m_Estado == WBS_Creando) {
-                glLineWidth(2.0f);
-                glEnable(GL_LINE_STIPPLE);
-                glLineStipple(3, 0xAAAA);
-                glColor4f(0.0f, 0.5f, 0.0f, 0.75f);
-                glBegin(GL_LINE_LOOP);
-                glVertex2d(m_Vertices[0].x, m_Vertices[0].y);
-                glVertex2d(m_Vertices[1].x, m_Vertices[1].y);
-                glVertex2d(m_Vertices[2].x, m_Vertices[2].y);
-                glVertex2d(m_Vertices[3].x, m_Vertices[3].y);
-                glEnd();
+                GLDraw::LineWidth(2.0f);
+                GLDraw::Enable(GL_LINE_STIPPLE);
+                GLDraw::LineStipple(3, 0xAAAA);
+                GLDraw::Color4f(0.0f, 0.5f, 0.0f, 0.75f);
+                GLDraw::Begin(GL_LINE_LOOP);
+                GLDraw::Vertex2d(m_Vertices[0].x, m_Vertices[0].y);
+                GLDraw::Vertex2d(m_Vertices[1].x, m_Vertices[1].y);
+                GLDraw::Vertex2d(m_Vertices[2].x, m_Vertices[2].y);
+                GLDraw::Vertex2d(m_Vertices[3].x, m_Vertices[3].y);
+                GLDraw::End();
 
-                glDisable(GL_LINE_STIPPLE);
+                GLDraw::Disable(GL_LINE_STIPPLE);
         } else {
 
         }
@@ -369,93 +372,93 @@ void GNC::GCS::Widgets::WRectangulo::Render(GNC::GCS::Contexto3D* /*c*/)
         }
 
         wColorSombra.Aplicar();
-        glBegin(GL_QUADS);
-        glVertex2d(m_Vertices[0].x, m_Vertices[0].y);
-        glVertex2d(m_Vertices[1].x, m_Vertices[1].y);
-        glVertex2d(m_Vertices[2].x, m_Vertices[2].y);
-        glVertex2d(m_Vertices[3].x, m_Vertices[3].y);
-        glEnd();
+        GLDraw::Begin(GL_QUADS);
+        GLDraw::Vertex2d(m_Vertices[0].x, m_Vertices[0].y);
+        GLDraw::Vertex2d(m_Vertices[1].x, m_Vertices[1].y);
+        GLDraw::Vertex2d(m_Vertices[2].x, m_Vertices[2].y);
+        GLDraw::Vertex2d(m_Vertices[3].x, m_Vertices[3].y);
+        GLDraw::End();
 
         if (m_Seleccionado) {
-                glLineWidth(2.0f);
-                glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
-                glBegin(GL_LINE_LOOP);
-                glVertex2d(m_Vertices[0].x, m_Vertices[0].y);
-                glVertex2d(m_Vertices[1].x, m_Vertices[1].y);
-                glVertex2d(m_Vertices[2].x, m_Vertices[2].y);
-                glVertex2d(m_Vertices[3].x, m_Vertices[3].y);
-                glEnd();
+                GLDraw::LineWidth(2.0f);
+                GLDraw::Color4f(1.0f, 0.0f, 0.0f, 1.0f);
+                GLDraw::Begin(GL_LINE_LOOP);
+                GLDraw::Vertex2d(m_Vertices[0].x, m_Vertices[0].y);
+                GLDraw::Vertex2d(m_Vertices[1].x, m_Vertices[1].y);
+                GLDraw::Vertex2d(m_Vertices[2].x, m_Vertices[2].y);
+                GLDraw::Vertex2d(m_Vertices[3].x, m_Vertices[3].y);
+                GLDraw::End();
         }
 
         if (m_Vertices[0].m_Seleccionado || m_Vertices[0].m_Iluminado) {
-                glPointSize(5.0f);
+                GLDraw::PointSize(5.0f);
                 if (m_Vertices[0].m_Seleccionado) {
-                        glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
+                        GLDraw::Color4f(1.0f, 0.0f, 0.0f, 1.0f);
                 } else {
-                        glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
+                        GLDraw::Color4f(0.0f, 1.0f, 0.0f, 1.0f);
                 }
 
-                glBegin(GL_LINE_STRIP);
-                glVertex2d(m_Vertices[3].x, m_Vertices[3].y);
-                glVertex2d(m_Vertices[0].x, m_Vertices[0].y);
-                glVertex2d(m_Vertices[1].x, m_Vertices[1].y);
-                glEnd();
+                GLDraw::Begin(GL_LINE_STRIP);
+                GLDraw::Vertex2d(m_Vertices[3].x, m_Vertices[3].y);
+                GLDraw::Vertex2d(m_Vertices[0].x, m_Vertices[0].y);
+                GLDraw::Vertex2d(m_Vertices[1].x, m_Vertices[1].y);
+                GLDraw::End();
 
-                glBegin(GL_POINTS);
-                glVertex2d(m_Vertices[0].x, m_Vertices[0].y);
-                glEnd();
+                GLDraw::Begin(GL_POINTS);
+                GLDraw::Vertex2d(m_Vertices[0].x, m_Vertices[0].y);
+                GLDraw::End();
         } else if (m_Vertices[1].m_Seleccionado || m_Vertices[1].m_Iluminado) {
                 if (m_Vertices[1].m_Seleccionado) {
-                        glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
+                        GLDraw::Color4f(1.0f, 0.0f, 0.0f, 1.0f);
                 } else {
-                        glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
+                        GLDraw::Color4f(0.0f, 1.0f, 0.0f, 1.0f);
                 }
 
-                glBegin(GL_LINE_STRIP);
-                glVertex2d(m_Vertices[0].x, m_Vertices[0].y);
-                glVertex2d(m_Vertices[1].x, m_Vertices[1].y);
-                glVertex2d(m_Vertices[2].x, m_Vertices[2].y);
-                glEnd();
+                GLDraw::Begin(GL_LINE_STRIP);
+                GLDraw::Vertex2d(m_Vertices[0].x, m_Vertices[0].y);
+                GLDraw::Vertex2d(m_Vertices[1].x, m_Vertices[1].y);
+                GLDraw::Vertex2d(m_Vertices[2].x, m_Vertices[2].y);
+                GLDraw::End();
 
-                glPointSize(5.0f);
-                glBegin(GL_POINTS);
-                glVertex2d(m_Vertices[1].x, m_Vertices[1].y);
-                glEnd();
+                GLDraw::PointSize(5.0f);
+                GLDraw::Begin(GL_POINTS);
+                GLDraw::Vertex2d(m_Vertices[1].x, m_Vertices[1].y);
+                GLDraw::End();
 
         } else if (m_Vertices[2].m_Seleccionado || m_Vertices[2].m_Iluminado) {
                 if (m_Vertices[2].m_Seleccionado) {
-                        glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
+                        GLDraw::Color4f(1.0f, 0.0f, 0.0f, 1.0f);
                 } else {
-                        glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
+                        GLDraw::Color4f(0.0f, 1.0f, 0.0f, 1.0f);
                 }
 
-                glBegin(GL_LINE_STRIP);
-                glVertex2d(m_Vertices[1].x, m_Vertices[1].y);
-                glVertex2d(m_Vertices[2].x, m_Vertices[2].y);
-                glVertex2d(m_Vertices[3].x, m_Vertices[3].y);
-                glEnd();
+                GLDraw::Begin(GL_LINE_STRIP);
+                GLDraw::Vertex2d(m_Vertices[1].x, m_Vertices[1].y);
+                GLDraw::Vertex2d(m_Vertices[2].x, m_Vertices[2].y);
+                GLDraw::Vertex2d(m_Vertices[3].x, m_Vertices[3].y);
+                GLDraw::End();
 
-                glPointSize(5.0f);
-                glBegin(GL_POINTS);
-                glVertex2d(m_Vertices[2].x, m_Vertices[2].y);
-                glEnd();
+                GLDraw::PointSize(5.0f);
+                GLDraw::Begin(GL_POINTS);
+                GLDraw::Vertex2d(m_Vertices[2].x, m_Vertices[2].y);
+                GLDraw::End();
         } else if (m_Vertices[3].m_Seleccionado || m_Vertices[3].m_Iluminado) {
                 if (m_Vertices[3].m_Seleccionado) {
-                        glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
+                        GLDraw::Color4f(1.0f, 0.0f, 0.0f, 1.0f);
                 } else {
-                        glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
+                        GLDraw::Color4f(0.0f, 1.0f, 0.0f, 1.0f);
                 }
 
-                glBegin(GL_LINE_STRIP);
-                glVertex2d(m_Vertices[2].x, m_Vertices[2].y);
-                glVertex2d(m_Vertices[3].x, m_Vertices[3].y);
-                glVertex2d(m_Vertices[0].x, m_Vertices[0].y);
-                glEnd();
+                GLDraw::Begin(GL_LINE_STRIP);
+                GLDraw::Vertex2d(m_Vertices[2].x, m_Vertices[2].y);
+                GLDraw::Vertex2d(m_Vertices[3].x, m_Vertices[3].y);
+                GLDraw::Vertex2d(m_Vertices[0].x, m_Vertices[0].y);
+                GLDraw::End();
 
-                glPointSize(5.0f);
-                glBegin(GL_POINTS);
-                glVertex2d(m_Vertices[3].x, m_Vertices[3].y);
-                glEnd();
+                GLDraw::PointSize(5.0f);
+                GLDraw::Begin(GL_POINTS);
+                GLDraw::Vertex2d(m_Vertices[3].x, m_Vertices[3].y);
+                GLDraw::End();
         }
 }
 

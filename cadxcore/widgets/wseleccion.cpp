@@ -25,6 +25,9 @@
 #include <api/math/geometry3d.h>
 #include <vtk_glew.h>
 #include <cmath>
+#include <vtk/gldraw.h>
+
+namespace GLDraw = GNC::GCS::GLDraw;
 
 //region "Implementacion de WSeleccionBuilder"
 
@@ -119,24 +122,24 @@ void GNC::GCS::Widgets::WSeleccionBuilder::Render(GNC::GCS::Contexto3D* c)
 {
 
         if (m_Estado == WBS_Creando) {
-                glLineWidth(1.0f);
-                glColor4f(0.0f, 0.36f, 0.807f, 0.15f);
+                GLDraw::LineWidth(1.0f);
+                GLDraw::Color4f(0.0f, 0.36f, 0.807f, 0.15f);
                 GNC::GCS::Vector a = m_Start.ProyeccionOrtogonalSobreRecta(m_Stop,  m_Stop - c->ScreenDirectionCosines[0]);
                 GNC::GCS::Vector b = m_Start.ProyeccionOrtogonalSobreRecta(m_Stop,  m_Stop - c->ScreenDirectionCosines[1]);
 
-                glBegin(GL_QUADS);
-                glVertex2dv(m_Start.v);
-                glVertex2dv(a.v);
-                glVertex2dv(m_Stop.v);
-                glVertex2dv(b.v);
-                glEnd();
-                glColor4f(0.0f, 0.36f, 0.807f, 1.0f);
-                glBegin(GL_LINE_LOOP);
-                glVertex2dv(m_Start.v);
-                glVertex2dv(a.v);
-                glVertex2dv(m_Stop.v);
-                glVertex2dv(b.v);
-                glEnd();
+                GLDraw::Begin(GL_QUADS);
+                GLDraw::Vertex2dv(m_Start.v);
+                GLDraw::Vertex2dv(a.v);
+                GLDraw::Vertex2dv(m_Stop.v);
+                GLDraw::Vertex2dv(b.v);
+                GLDraw::End();
+                GLDraw::Color4f(0.0f, 0.36f, 0.807f, 1.0f);
+                GLDraw::Begin(GL_LINE_LOOP);
+                GLDraw::Vertex2dv(m_Start.v);
+                GLDraw::Vertex2dv(a.v);
+                GLDraw::Vertex2dv(m_Stop.v);
+                GLDraw::Vertex2dv(b.v);
+                GLDraw::End();
         } else {
 
         }

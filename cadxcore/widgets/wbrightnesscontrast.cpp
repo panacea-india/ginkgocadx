@@ -30,6 +30,9 @@
 #include <api/westilo.h>
 
 #include <vtk_glew.h>
+#include <vtk/gldraw.h>
+
+namespace GLDraw = GNC::GCS::GLDraw;
 
 //region "Implementacion de WBrightnessContrastBuilder"
 
@@ -94,72 +97,72 @@ void GNC::GCS::Widgets::WBrightnessContrastBuilder::Render(GNC::GCS::Contexto3D*
         }
 
         double viewport[4] = {0.0f, 0.0f, 0.0f, 0.0f}; // { x, y, ancho, alto }. Convenio de coordenadas: {x, y} == {bottom, left}, {ancho, alto} == {top, right}
-        glGetDoublev(GL_VIEWPORT, viewport);
+        GLDraw::GetDoublev(GL_VIEWPORT, viewport);
 
-        glPushAttrib(GL_ALL_ATTRIB_BITS);
+        GLDraw::PushAttrib(GL_ALL_ATTRIB_BITS);
 
-        glMatrixMode(GL_TEXTURE);
-        glPushMatrix();
-        glLoadIdentity();
+        GLDraw::MatrixMode(GL_TEXTURE);
+        GLDraw::PushMatrix();
+        GLDraw::LoadIdentity();
 
-        glMatrixMode(GL_PROJECTION);
-        glPushMatrix();
-        glLoadIdentity();
-        glOrtho( 0, viewport[2] , viewport[3] , 0, -1, 1 );
+        GLDraw::MatrixMode(GL_PROJECTION);
+        GLDraw::PushMatrix();
+        GLDraw::LoadIdentity();
+        GLDraw::Ortho( 0, viewport[2] , viewport[3] , 0, -1, 1 );
 
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glLoadIdentity();
+        GLDraw::MatrixMode(GL_MODELVIEW);
+        GLDraw::PushMatrix();
+        GLDraw::LoadIdentity();
 
         {
                 // Dibujado de la regla
-                glLineWidth(m_LineWidthProp);
+                GLDraw::LineWidth(m_LineWidthProp);
 
                 wAplicarColor(false, false, false);
-                glBegin(GL_LINES);
-                glVertex2d(m_Start.x - 50.0f, m_Start.y);
-                glVertex2d(m_Start.x + 50.0f, m_Start.y);
-                glVertex2d(m_Start.x, m_Start.y - 50.0f);
-                glVertex2d(m_Start.x, m_Start.y + 50.0f);
-                glEnd();
+                GLDraw::Begin(GL_LINES);
+                GLDraw::Vertex2d(m_Start.x - 50.0f, m_Start.y);
+                GLDraw::Vertex2d(m_Start.x + 50.0f, m_Start.y);
+                GLDraw::Vertex2d(m_Start.x, m_Start.y - 50.0f);
+                GLDraw::Vertex2d(m_Start.x, m_Start.y + 50.0f);
+                GLDraw::End();
 
                 wAplicarColor(true, true, false);
-                glLineWidth(m_LineWidthProp * 0.5f);
-                glBegin(GL_LINES);
-                glVertex2d(m_Start.x, m_Start.y);
-                glVertex2d(m_Stop.x, m_Start.y);
-                glVertex2d(m_Start.x, m_Start.y);
-                glVertex2d(m_Start.x, m_Stop.y);
-                glEnd();
+                GLDraw::LineWidth(m_LineWidthProp * 0.5f);
+                GLDraw::Begin(GL_LINES);
+                GLDraw::Vertex2d(m_Start.x, m_Start.y);
+                GLDraw::Vertex2d(m_Stop.x, m_Start.y);
+                GLDraw::Vertex2d(m_Start.x, m_Start.y);
+                GLDraw::Vertex2d(m_Start.x, m_Stop.y);
+                GLDraw::End();
 
-                glEnable(GL_LINE_STIPPLE);
+                GLDraw::Enable(GL_LINE_STIPPLE);
 
-                glPointSize(WIDGET_SIZE_PUNTO * 0.5f);
-                glBegin(GL_POINTS);
-                glVertex2d(m_Stop.x, m_Start.y);
-                glVertex2d(m_Start.x, m_Stop.y);
-                glEnd();
+                GLDraw::PointSize(WIDGET_SIZE_PUNTO * 0.5f);
+                GLDraw::Begin(GL_POINTS);
+                GLDraw::Vertex2d(m_Stop.x, m_Start.y);
+                GLDraw::Vertex2d(m_Start.x, m_Stop.y);
+                GLDraw::End();
 
                 wAplicarColorSuave(true, false, false);
-                glLineStipple(3, 0xAAAA);
-                glBegin(GL_LINES);
-                glVertex2dv(m_Start);
-                glVertex2dv(m_Stop);
-                glEnd();
-                glDisable(GL_LINE_STIPPLE);
+                GLDraw::LineStipple(3, 0xAAAA);
+                GLDraw::Begin(GL_LINES);
+                GLDraw::Vertex2dv(m_Start);
+                GLDraw::Vertex2dv(m_Stop);
+                GLDraw::End();
+                GLDraw::Disable(GL_LINE_STIPPLE);
         }
 
-        glPopMatrix();
+        GLDraw::PopMatrix();
 
-        glMatrixMode(GL_PROJECTION);
-        glPopMatrix();
+        GLDraw::MatrixMode(GL_PROJECTION);
+        GLDraw::PopMatrix();
 
-        glMatrixMode(GL_TEXTURE);
-        glPopMatrix();
+        GLDraw::MatrixMode(GL_TEXTURE);
+        GLDraw::PopMatrix();
 
-        glMatrixMode(GL_MODELVIEW);
+        GLDraw::MatrixMode(GL_MODELVIEW);
 
-        glPopAttrib();
+        GLDraw::PopAttrib();
 }
 
 GNC::GCS::Widgets::TipoCursor GNC::GCS::Widgets::WBrightnessContrastBuilder::GetCursor()

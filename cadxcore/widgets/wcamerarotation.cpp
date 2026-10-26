@@ -37,6 +37,9 @@
 
 //region "Implementacion de WPanBuilder"
 #include <api/icontexto.h>
+#include <vtk/gldraw.h>
+
+namespace GLDraw = GNC::GCS::GLDraw;
 
 
 GNC::GCS::Widgets::WCameraRotation::WCameraRotation(TWidgetsManager* pManager, const GNC::GCS::TriggerButton& buttonMask, long gid) : GNC::GCS::Widgets::IWidgetBuilder(pManager, buttonMask, gid)
@@ -152,29 +155,29 @@ void GNC::GCS::Widgets::WCameraRotation::Render(GNC::GCS::Contexto3D* /*c*/)
         TVector pos = TVector(std::max(m_Start.x - box.x, std::min(m_Start.x + box.x, m_Stop.x)), m_Start.y);
 
         if (m_Estado == WBS_Creando) {
-        	glLineWidth(2.0f);
-        	glColor4f(0.0f, 0.75f, 0.0f, 1.0f);
+        	GLDraw::LineWidth(2.0f);
+        	GLDraw::Color4f(0.0f, 0.75f, 0.0f, 1.0f);
 
-        	glBegin(GL_LINES);
+        	GLDraw::Begin(GL_LINES);
 
-        		glVertex2d(m_Start.x - box.x, m_Start.y);
-        		glVertex2d(m_Start.x + box.x, m_Start.y);
+        		GLDraw::Vertex2d(m_Start.x - box.x, m_Start.y);
+        		GLDraw::Vertex2d(m_Start.x + box.x, m_Start.y);
 
-        		glVertex2d(m_Start.x - box.x, m_Start.y - box.y);
-        		glVertex2d(m_Start.x - box.x, m_Start.y + box.y);
+        		GLDraw::Vertex2d(m_Start.x - box.x, m_Start.y - box.y);
+        		GLDraw::Vertex2d(m_Start.x - box.x, m_Start.y + box.y);
 
-        		glVertex2d(m_Start.x + box.x, m_Start.y - box.y);
-        		glVertex2d(m_Start.x + box.x, m_Start.y + box.y);
+        		GLDraw::Vertex2d(m_Start.x + box.x, m_Start.y - box.y);
+        		GLDraw::Vertex2d(m_Start.x + box.x, m_Start.y + box.y);
 
-        	glEnd();
+        	GLDraw::End();
 
-        	glColor4f(0.75f, 0.0f, 0.0f, 1.0f);
+        	GLDraw::Color4f(0.75f, 0.0f, 0.0f, 1.0f);
 
-        	glLineWidth(1.5);
-        	glBegin(GL_LINES);
-        		glVertex2d(pos.x, pos.y - box.y);
-        		glVertex2d(pos.x, pos.y + box.y);
-        	glEnd();
+        	GLDraw::LineWidth(1.5);
+        	GLDraw::Begin(GL_LINES);
+        		GLDraw::Vertex2d(pos.x, pos.y - box.y);
+        		GLDraw::Vertex2d(pos.x, pos.y + box.y);
+        	GLDraw::End();
         }
         else {
 

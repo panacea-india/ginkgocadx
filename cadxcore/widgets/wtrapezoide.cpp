@@ -30,6 +30,9 @@
 #include <vtk_glew.h>
 #include <api/westilo.h>
 #include <cmath>
+#include <vtk/gldraw.h>
+
+namespace GLDraw = GNC::GCS::GLDraw;
 
 
 //region "Implementacion de WTrapezoideBuilder , se construye exactamente igual a un rectangulo"
@@ -148,18 +151,18 @@ void GNC::GCS::Widgets::WTrapezoideBuilder::Render(GNC::GCS::Contexto3D* /*c*/)
 {
 
         if (m_Estado == WBS_Creando) {
-                glLineWidth(2.0f);
-                //glEnable(GL_LINE_STIPPLE);
-                //glLineStipple(3, 0xAAAA);
-                glColor4f(0.0f, 0.5f, 0.0f, 0.75f);
-                glBegin(GL_LINE_LOOP);
-                glVertex2d(m_Vertices[0].x, m_Vertices[0].y);
-                glVertex2d(m_Vertices[1].x, m_Vertices[1].y);
-                glVertex2d(m_Vertices[2].x, m_Vertices[2].y);
-                glVertex2d(m_Vertices[3].x, m_Vertices[3].y);
-                glEnd();
+                GLDraw::LineWidth(2.0f);
+                //GLDraw::Enable(GL_LINE_STIPPLE);
+                //GLDraw::LineStipple(3, 0xAAAA);
+                GLDraw::Color4f(0.0f, 0.5f, 0.0f, 0.75f);
+                GLDraw::Begin(GL_LINE_LOOP);
+                GLDraw::Vertex2d(m_Vertices[0].x, m_Vertices[0].y);
+                GLDraw::Vertex2d(m_Vertices[1].x, m_Vertices[1].y);
+                GLDraw::Vertex2d(m_Vertices[2].x, m_Vertices[2].y);
+                GLDraw::Vertex2d(m_Vertices[3].x, m_Vertices[3].y);
+                GLDraw::End();
 
-                //glDisable(GL_LINE_STIPPLE);
+                //GLDraw::Disable(GL_LINE_STIPPLE);
         } else {
 
         }

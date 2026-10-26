@@ -59,6 +59,9 @@
 #include <vtk/vtkginkgoimageviewer.h>
 #include <vtk/legacyglscope.h>
 #include <api/controllers/icontroladorcarga.h>
+#include <vtk/gldraw.h>
+
+namespace GLDraw = GNC::GCS::GLDraw;
 
 
 vtkStandardNewMacro(WidgetRepresentation);
@@ -354,9 +357,9 @@ void WidgetsActor::Render(vtkRenderer* ren, vtkMapper* mapper)
                 mat2[15] = mat[15];
 
                 // insert model transformation
-                glMatrixMode(GL_MODELVIEW);
-                glPushMatrix();
-                glMultMatrixd(mat2);
+                GLDraw::MatrixMode(GL_MODELVIEW);
+                GLDraw::PushMatrix();
+                GLDraw::MultMatrixd(mat2);
         }
 
         // send a render to the mapper; update pipeline
@@ -364,8 +367,8 @@ void WidgetsActor::Render(vtkRenderer* ren, vtkMapper* mapper)
 
         // pop transformation matrix
         if (!this->IsIdentity) {
-                glMatrixMode(GL_MODELVIEW);
-                glPopMatrix();
+                GLDraw::MatrixMode(GL_MODELVIEW);
+                GLDraw::PopMatrix();
         }
 
         //glDepthMask(GL_TRUE);
@@ -554,28 +557,28 @@ void ImprimirMatriz(const double matriz[16])
 int WidgetsMapper::Draw(vtkRenderer *aren, vtkActor* /*act*/)
 {
 
-        glPushAttrib(GL_ALL_ATTRIB_BITS);
+        GLDraw::PushAttrib(GL_ALL_ATTRIB_BITS);
 
-        glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
-        glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-        glEnable(GL_POINT_SMOOTH);
-        glEnable(GL_LINE_SMOOTH);
-        glEnable(GL_POLYGON_SMOOTH);
-        glEnable(GL_BLEND);
-        glDisable (GL_ALPHA_TEST);
-        glDisable(GL_SCISSOR_TEST);
-        //glAlphaFunc (GL_GREATER, 0);
+        GLDraw::Hint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+        GLDraw::Hint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+        GLDraw::Enable(GL_POINT_SMOOTH);
+        GLDraw::Enable(GL_LINE_SMOOTH);
+        GLDraw::Enable(GL_POLYGON_SMOOTH);
+        GLDraw::Enable(GL_BLEND);
+        GLDraw::Disable(GL_ALPHA_TEST);
+        GLDraw::Disable(GL_SCISSOR_TEST);
+        //GLDraw::AlphaFunc(GL_GREATER, 0);
         glFrontFace(GL_CCW);
         glCullFace(GL_FRONT);
 
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_LIGHTING);
-        glEnable(GL_TEXTURE_2D);
+        GLDraw::Disable(GL_DEPTH_TEST);
+        GLDraw::Disable(GL_LIGHTING);
+        GLDraw::Enable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, 0);
-        glDisable(GL_TEXTURE_2D);
+        GLDraw::Disable(GL_TEXTURE_2D);
 
-        glMatrixMode(GL_MODELVIEW);
+        GLDraw::MatrixMode(GL_MODELVIEW);
 
         if (!m_pWRenderer) {
                 LOG_ERROR("idgetsMapper::Draw", "m_pWRenderer=NULL, bailing out");
@@ -599,13 +602,13 @@ int WidgetsMapper::Draw(vtkRenderer *aren, vtkActor* /*act*/)
         MatrizModelo[13] = wp[1];
         MatrizModelo[14] = wp[2];
 
-        glMultMatrixd(MatrizModelo);
+        GLDraw::MultMatrixd(MatrizModelo);
 
         if (m_pWManager != NULL && m_pWRenderer != NULL) {
                 m_pWManager->RenderPrivate(m_pWRenderer->m_c);
         }
 
-        glPopAttrib();
+        GLDraw::PopAttrib();
         this->UpdateProgress(1.0);
         return aren->GetRenderWindow()->CheckAbortStatus();
 }

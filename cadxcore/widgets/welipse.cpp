@@ -31,6 +31,9 @@
 #include <vtk_glew.h>
 #include <api/westilo.h>
 #include <cmath>
+#include <vtk/gldraw.h>
+
+namespace GLDraw = GNC::GCS::GLDraw;
 
 
 //region "Implementacion de WElipseBuilder"
@@ -159,17 +162,17 @@ void GNC::GCS::Widgets::WElipseBuilder::Render(GNC::GCS::Contexto3D* /*c*/)
 
                 float step = M_2PI / 100;
 
-                glLineWidth(2.0f);
-                glColor4f(0.0f, 0.5f, 0.0f, 0.75f);
-                glBegin(GL_LINE_LOOP);
+                GLDraw::LineWidth(2.0f);
+                GLDraw::Color4f(0.0f, 0.5f, 0.0f, 0.75f);
+                GLDraw::Begin(GL_LINE_LOOP);
 
                 for ( float angulo = 0; angulo < M_2PI; angulo += step) {
                         GNC::GCS::Vector v (m_NormaRadioMayor * cos(angulo), m_NormaRadioMenor * sin(angulo));
                         v = centro + v.RotacionSobreZ(m_Angulo);
-                        glVertex3f(v.x , v.y, 0.0f);
+                        GLDraw::Vertex3f(v.x , v.y, 0.0f);
                 }
 
-                glEnd();
+                GLDraw::End();
         } else {
 
         }
@@ -579,7 +582,7 @@ void GNC::GCS::Widgets::WElipse::Render(GNC::GCS::Contexto3D* c)
 
         GNC::GCS::Vector escala = c->RelacionImagenPantalla();
 
-        glLineWidth(m_LineWidthProp);
+        GLDraw::LineWidth(m_LineWidthProp);
 
         // Sombras
         float fsombrax, fsombray;
@@ -593,24 +596,24 @@ void GNC::GCS::Widgets::WElipse::Render(GNC::GCS::Contexto3D* c)
 
         // Sombra del cuerpo
         wColorSombra.Aplicar();
-        glBegin(GL_LINE_LOOP);
+        GLDraw::Begin(GL_LINE_LOOP);
         for (unsigned int i = 0; i < m_NumNodos; ++i) {
-                glVertex2d(m_Nodos[i].x + fsombrax , m_Nodos[i].y - fsombray);
+                GLDraw::Vertex2d(m_Nodos[i].x + fsombrax , m_Nodos[i].y - fsombray);
         }
-        glEnd();
+        GLDraw::End();
 
         // Sombra de los puntos
-        glPointSize(WIDGET_SIZE_PUNTO);
+        GLDraw::PointSize(WIDGET_SIZE_PUNTO);
 
         if (m_Seleccionado && m_MouseDown)
-                glPointSize(WIDGET_SIZE_PUNTO * WIDGET_INCREMENTO_DETALLE_SELECCIONADO);
+                GLDraw::PointSize(WIDGET_SIZE_PUNTO * WIDGET_INCREMENTO_DETALLE_SELECCIONADO);
 
-        glBegin(GL_POINTS);
-        glVertex2d(m_NodoRadioMayor.x + fsombrax, m_NodoRadioMayor.y - fsombray);
-        glVertex2d(m_NodoRadioMayorReflejado.x + fsombrax, m_NodoRadioMayorReflejado.y - fsombray);
-        glVertex2d(m_NodoRadioMenor.x + fsombrax, m_NodoRadioMenor.y - fsombray);
-        glVertex2d(m_NodoRadioMenorReflejado.x + fsombrax, m_NodoRadioMenorReflejado.y - fsombray);
-        glEnd();
+        GLDraw::Begin(GL_POINTS);
+        GLDraw::Vertex2d(m_NodoRadioMayor.x + fsombrax, m_NodoRadioMayor.y - fsombray);
+        GLDraw::Vertex2d(m_NodoRadioMayorReflejado.x + fsombrax, m_NodoRadioMayorReflejado.y - fsombray);
+        GLDraw::Vertex2d(m_NodoRadioMenor.x + fsombrax, m_NodoRadioMenor.y - fsombray);
+        GLDraw::Vertex2d(m_NodoRadioMenorReflejado.x + fsombrax, m_NodoRadioMenorReflejado.y - fsombray);
+        GLDraw::End();
 
         // Highlights
         bool nodoEnabled = false;
@@ -637,55 +640,55 @@ void GNC::GCS::Widgets::WElipse::Render(GNC::GCS::Contexto3D* c)
 
         // Dibujado
         wAplicarColor(m_Iluminado, m_MouseDown, m_Seleccionado);
-        glBegin(GL_LINE_LOOP);
+        GLDraw::Begin(GL_LINE_LOOP);
         for (unsigned int i = 0; i < m_NumNodos; ++i) {
-                glVertex2d(m_Nodos[i].x, m_Nodos[i].y);
+                GLDraw::Vertex2d(m_Nodos[i].x, m_Nodos[i].y);
         }
-        glEnd();
+        GLDraw::End();
 
         // Lineas internas
         if (nodoEnabled) {
-                glLineWidth(1.0f);
-                glEnable(GL_LINE_STIPPLE);
+                GLDraw::LineWidth(1.0f);
+                GLDraw::Enable(GL_LINE_STIPPLE);
                 wColorAngulo.Aplicar();
-                glLineStipple(3, 0xAAAA);
+                GLDraw::LineStipple(3, 0xAAAA);
 
-                glBegin(GL_LINES);
-                glVertex2d(m_NodoRadioMayor.x, m_NodoRadioMayor.y);
-                glVertex2d(m_NodoRadioMayorReflejado.x, m_NodoRadioMayorReflejado.y);
-                glEnd();
+                GLDraw::Begin(GL_LINES);
+                GLDraw::Vertex2d(m_NodoRadioMayor.x, m_NodoRadioMayor.y);
+                GLDraw::Vertex2d(m_NodoRadioMayorReflejado.x, m_NodoRadioMayorReflejado.y);
+                GLDraw::End();
 
-                glBegin(GL_LINES);
-                glVertex2d(m_NodoRadioMenor.x, m_NodoRadioMenor.y);
-                glVertex2d(m_NodoRadioMenorReflejado.x, m_NodoRadioMenorReflejado.y);
-                glEnd();
+                GLDraw::Begin(GL_LINES);
+                GLDraw::Vertex2d(m_NodoRadioMenor.x, m_NodoRadioMenor.y);
+                GLDraw::Vertex2d(m_NodoRadioMenorReflejado.x, m_NodoRadioMenorReflejado.y);
+                GLDraw::End();
 
-                glDisable(GL_LINE_STIPPLE);
+                GLDraw::Disable(GL_LINE_STIPPLE);
         }
 
 
         // Nodos
-        glPointSize(WIDGET_SIZE_PUNTO);
+        GLDraw::PointSize(WIDGET_SIZE_PUNTO);
 
         wAplicarColor(m_Iluminado || m_NodoRadioMayor.m_Iluminado, m_MouseDown, m_Seleccionado);
-        glBegin(GL_POINTS);
-        glVertex2d(m_NodoRadioMayor.x, m_NodoRadioMayor.y);
-        glEnd();
+        GLDraw::Begin(GL_POINTS);
+        GLDraw::Vertex2d(m_NodoRadioMayor.x, m_NodoRadioMayor.y);
+        GLDraw::End();
 
         wAplicarColor(m_Iluminado || m_NodoRadioMayorReflejado.m_Iluminado, m_MouseDown, m_Seleccionado);
-        glBegin(GL_POINTS);
-        glVertex2d(m_NodoRadioMayorReflejado.x, m_NodoRadioMayorReflejado.y);
-        glEnd();
+        GLDraw::Begin(GL_POINTS);
+        GLDraw::Vertex2d(m_NodoRadioMayorReflejado.x, m_NodoRadioMayorReflejado.y);
+        GLDraw::End();
 
         wAplicarColor(m_Iluminado || m_NodoRadioMenor.m_Iluminado, m_MouseDown, m_Seleccionado);
-        glBegin(GL_POINTS);
-        glVertex2d(m_NodoRadioMenor.x, m_NodoRadioMenor.y);
-        glEnd();
+        GLDraw::Begin(GL_POINTS);
+        GLDraw::Vertex2d(m_NodoRadioMenor.x, m_NodoRadioMenor.y);
+        GLDraw::End();
 
         wAplicarColor(m_Iluminado || m_NodoRadioMenorReflejado.m_Iluminado, m_MouseDown, m_Seleccionado);
-        glBegin(GL_POINTS);
-        glVertex2d(m_NodoRadioMenorReflejado.x, m_NodoRadioMenorReflejado.y);
-        glEnd();
+        GLDraw::Begin(GL_POINTS);
+        GLDraw::Vertex2d(m_NodoRadioMenorReflejado.x, m_NodoRadioMenorReflejado.y);
+        GLDraw::End();
 }
 
 void GNC::GCS::Widgets::WElipse::Recalcular()

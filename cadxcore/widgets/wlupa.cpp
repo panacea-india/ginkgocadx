@@ -42,6 +42,9 @@
 #include <vtk/vtkginkgoimageviewer.h>
 
 #include <wx/defs.h>
+#include <vtk/gldraw.h>
+
+namespace GLDraw = GNC::GCS::GLDraw;
 
 //region "Implementacion de WBuilder"
 
@@ -382,56 +385,56 @@ void GNC::GCS::Widgets::WLupa::Render(GNC::GCS::Contexto3D* c)
         const GNC::GCS::Vector& escala = m_RelacionImagenPantalla;
 
         //glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-        glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-        glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+        GLDraw::Hint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+        GLDraw::Hint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
 
         // Dibujado de sombra de la lupa
         GNC::GCS::Vector::TComp fsombrax = 6.0f * escala.x;
         GNC::GCS::Vector::TComp fsombray = 2.0f * escala.y;
-        glBegin(GL_QUAD_STRIP);
+        GLDraw::Begin(GL_QUAD_STRIP);
         for (unsigned int i = 0; i < m_NumVertices; i++) {
-                glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
-                glVertex2d( m_VInteriores[i].x + fsombrax,m_VInteriores[i].y - fsombray);
-                glColor4f(0.1f, 0.1f, 0.1f, 0.1f);
-                glVertex2d( m_VExteriores[i].x + fsombrax,m_VExteriores[i].y -fsombray);
+                GLDraw::Color4f(0.0f, 0.0f, 0.0f, 1.0f);
+                GLDraw::Vertex2d( m_VInteriores[i].x + fsombrax,m_VInteriores[i].y - fsombray);
+                GLDraw::Color4f(0.1f, 0.1f, 0.1f, 0.1f);
+                GLDraw::Vertex2d( m_VExteriores[i].x + fsombrax,m_VExteriores[i].y -fsombray);
         }
         if (m_NumVertices > 0) {
-                glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
-                glVertex2d( m_VInteriores[0].x + fsombrax,m_VInteriores[0].y - fsombray);
-                glColor4f(0.1f, 0.1f, 0.1f, 0.1f);
-                glVertex2d( m_VExteriores[0].x + fsombrax,m_VExteriores[0].y - fsombray);
+                GLDraw::Color4f(0.0f, 0.0f, 0.0f, 1.0f);
+                GLDraw::Vertex2d( m_VInteriores[0].x + fsombrax,m_VInteriores[0].y - fsombray);
+                GLDraw::Color4f(0.1f, 0.1f, 0.1f, 0.1f);
+                GLDraw::Vertex2d( m_VExteriores[0].x + fsombrax,m_VExteriores[0].y - fsombray);
         }
 
-        glEnd();
+        GLDraw::End();
 
 
         // Dibujado del efecto 3D de la lupa
-        glColor4f(0.1f, 0.1f, 0.1f, 1.0f);
+        GLDraw::Color4f(0.1f, 0.1f, 0.1f, 1.0f);
         fsombrax = 3.0f * escala.x;
         fsombray = 2.0f * escala.y;
-        glBegin(GL_QUAD_STRIP);
+        GLDraw::Begin(GL_QUAD_STRIP);
         for (unsigned int i = 0; i < m_NumVertices; i++) {
-                glVertex2d( m_VInteriores[i].x + fsombrax, m_VInteriores[i].y - fsombray);
-                glVertex2d( m_VExteriores[i].x + fsombrax, m_VExteriores[i].y - fsombray);
+                GLDraw::Vertex2d( m_VInteriores[i].x + fsombrax, m_VInteriores[i].y - fsombray);
+                GLDraw::Vertex2d( m_VExteriores[i].x + fsombrax, m_VExteriores[i].y - fsombray);
         }
         if (m_NumVertices > 0) {
-                glVertex2d( m_VInteriores[0].x + fsombrax, m_VInteriores[0].y - fsombray);
-                glVertex2d( m_VExteriores[0].x + fsombrax, m_VExteriores[0].y - fsombray);
+                GLDraw::Vertex2d( m_VInteriores[0].x + fsombrax, m_VInteriores[0].y - fsombray);
+                GLDraw::Vertex2d( m_VExteriores[0].x + fsombrax, m_VExteriores[0].y - fsombray);
         }
 
-        glEnd();
+        GLDraw::End();
 
-        glBegin(GL_LINE_LOOP);
-        glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+        GLDraw::Begin(GL_LINE_LOOP);
+        GLDraw::Color4f(0.0f, 0.0f, 0.0f, 1.0f);
         for (unsigned int i = 0; i < m_NumVertices; i++) {
-                glVertex2d( m_VExteriores[i].x + fsombrax, m_VExteriores[i].y - fsombray);
+                GLDraw::Vertex2d( m_VExteriores[i].x + fsombrax, m_VExteriores[i].y - fsombray);
         }
-        glEnd();
+        GLDraw::End();
 
 
-        glDisable(GL_BLEND);
+        GLDraw::Disable(GL_BLEND);
 
-        glColor4f(0.0f, 0.0f, 0.0f, 0.0f);
+        GLDraw::Color4f(0.0f, 0.0f, 0.0f, 0.0f);
 
         double worldPoint[3];
         worldPoint[0] = m_Centro.x;
@@ -447,17 +450,17 @@ void GNC::GCS::Widgets::WLupa::Render(GNC::GCS::Contexto3D* c)
         }
 
         // Dibujado del fondo solido de la lente
-        glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
-        glBegin(GL_TRIANGLE_FAN);
-        glVertex2d(m_Centro.x, m_Centro.y);
+        GLDraw::Color4f(0.0f, 0.0f, 0.0f, 1.0f);
+        GLDraw::Begin(GL_TRIANGLE_FAN);
+        GLDraw::Vertex2d(m_Centro.x, m_Centro.y);
         for (unsigned int i = 0; i < m_NumVertices; i++) {
-                glVertex2d(m_VInteriores[i].x, m_VInteriores[i].y);
+                GLDraw::Vertex2d(m_VInteriores[i].x, m_VInteriores[i].y);
         }
         if (m_NumVertices > 0) {
-                glVertex2d(m_VInteriores[0].x, m_VInteriores[0].y);
+                GLDraw::Vertex2d(m_VInteriores[0].x, m_VInteriores[0].y);
         }
 
-        glEnd();
+        GLDraw::End();
 
 
         long IdTextura = c->GetRenderer()->m_pImageViewer->GetImageTexture();
@@ -474,7 +477,7 @@ void GNC::GCS::Widgets::WLupa::Render(GNC::GCS::Contexto3D* c)
                 GNC::GCS::Vector dimsImagen(dimensiones);
                 GNC::GCS::Vector spacingImagen(spacing);
 
-                glEnable(GL_TEXTURE_2D);
+                GLDraw::Enable(GL_TEXTURE_2D);
                 glBindTexture(GL_TEXTURE_2D, IdTextura);
 
                 glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &(dimensionesTextura[0]) );
@@ -482,7 +485,7 @@ void GNC::GCS::Widgets::WLupa::Render(GNC::GCS::Contexto3D* c)
 
                 glBindTexture(GL_TEXTURE_2D, 0);
 
-                glDisable(GL_TEXTURE_2D);
+                GLDraw::Disable(GL_TEXTURE_2D);
 
                 GNC::GCS::Vector dimsTextura(dimensionesTextura);
 
@@ -516,68 +519,68 @@ void GNC::GCS::Widgets::WLupa::Render(GNC::GCS::Contexto3D* c)
 
 #if 0 /* Codigo de depurado visual */
                 /*
-                glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
-                glLineWidth(2.0f);
-                glBegin(GL_LINES);
-                glVertex3dv(rectCam[0].v);
-                glVertex3dv(rectCam[1].v);
-                glEnd();
+                GLDraw::Color4f(1.0f, 0.0f, 0.0f, 1.0f);
+                GLDraw::LineWidth(2.0f);
+                GLDraw::Begin(GL_LINES);
+                GLDraw::Vertex3dv(rectCam[0].v);
+                GLDraw::Vertex3dv(rectCam[1].v);
+                GLDraw::End();
                 */
 
 
-                glLineWidth(2.0f);
-                glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
-                glBegin(GL_LINES);
-                glVertex3dv(v0.v);
-                glVertex3dv(v1.v);
-                glEnd();
+                GLDraw::LineWidth(2.0f);
+                GLDraw::Color4f(1.0f, 1.0f, 0.0f, 1.0f);
+                GLDraw::Begin(GL_LINES);
+                GLDraw::Vertex3dv(v0.v);
+                GLDraw::Vertex3dv(v1.v);
+                GLDraw::End();
 
 
                 // Debug 2
 
                 double viewport[4] = {0.0f, 0.0f, 0.0f, 0.0f}; // { x, y, ancho, alto }. Convenio de coordenadas: {x, y} == {bottom, left}, {ancho, alto} == {top, right}
-                glGetDoublev(GL_VIEWPORT, viewport);
+                GLDraw::GetDoublev(GL_VIEWPORT, viewport);
 
-                glPushAttrib(GL_ALL_ATTRIB_BITS);
+                GLDraw::PushAttrib(GL_ALL_ATTRIB_BITS);
 
-                glMatrixMode(GL_PROJECTION);
-                glPushMatrix();
-                glLoadIdentity();
-                glOrtho( 0, viewport[2] , 0 , viewport[3], -1, 1 );
+                GLDraw::MatrixMode(GL_PROJECTION);
+                GLDraw::PushMatrix();
+                GLDraw::LoadIdentity();
+                GLDraw::Ortho( 0, viewport[2] , 0 , viewport[3], -1, 1 );
 
-                glMatrixMode(GL_MODELVIEW);
-                glPushMatrix();
-                glLoadIdentity();
+                GLDraw::MatrixMode(GL_MODELVIEW);
+                GLDraw::PushMatrix();
+                GLDraw::LoadIdentity();
 
-                glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
-                glLineWidth(2.0f);
-                glBegin(GL_LINES);
-                glVertex3dv(rectDis[0].v);
-                glVertex3dv(rectDis[1].v);
-                glEnd();
+                GLDraw::Color4f(1.0f, 0.0f, 0.0f, 1.0f);
+                GLDraw::LineWidth(2.0f);
+                GLDraw::Begin(GL_LINES);
+                GLDraw::Vertex3dv(rectDis[0].v);
+                GLDraw::Vertex3dv(rectDis[1].v);
+                GLDraw::End();
 
-                glMatrixMode(GL_MODELVIEW);
-                glPopMatrix();
+                GLDraw::MatrixMode(GL_MODELVIEW);
+                GLDraw::PopMatrix();
 
-                glMatrixMode(GL_PROJECTION);
-                glPopMatrix();
+                GLDraw::MatrixMode(GL_PROJECTION);
+                GLDraw::PopMatrix();
 
-                glMatrixMode(GL_MODELVIEW);
+                GLDraw::MatrixMode(GL_MODELVIEW);
 
-                glPopAttrib();
+                GLDraw::PopAttrib();
 
 #endif
 
 
 #if 1 /* Habilitar o deshabilitar scissor */
-                glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+                GLDraw::Color4f(0.0f, 0.0f, 0.0f, 1.0f);
                 glScissor(rectDis[0][0], rectDis[0][1], rectDis[1][0] - rectDis[0][0] - 1.0f, rectDis[1][1] - rectDis[0][1] - 1.0f);
-                glEnable(GL_SCISSOR_TEST);
+                GLDraw::Enable(GL_SCISSOR_TEST);
 #endif
 
-                glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE, GL_REPLACE);
+                GLDraw::TexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
-                glEnable(GL_TEXTURE_2D);
+                GLDraw::Enable(GL_TEXTURE_2D);
                 glBindTexture(GL_TEXTURE_2D, IdTextura);
 
                 glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
@@ -588,59 +591,59 @@ void GNC::GCS::Widgets::WLupa::Render(GNC::GCS::Contexto3D* c)
 
                 // Dibujado de la lente
 
-                glBegin(GL_TRIANGLE_FAN);
+                GLDraw::Begin(GL_TRIANGLE_FAN);
 
-                glTexCoord2d(vCoordCentro.x, vCoordCentro.y);
-                glVertex2d(m_Centro.x, m_Centro.y);
+                GLDraw::TexCoord2d(vCoordCentro.x, vCoordCentro.y);
+                GLDraw::Vertex2d(m_Centro.x, m_Centro.y);
 
                 angulo = 0.0f;
                 for (unsigned int i = 0; i < m_NumVertices; i++, angulo += m_AnguloVertices) {
-                        glTexCoord2d(m_VCoordsInteriores[i].x , m_VCoordsInteriores[i].y);
-                        glVertex2d(m_VInteriores[i].x, m_VInteriores[i].y);
+                        GLDraw::TexCoord2d(m_VCoordsInteriores[i].x , m_VCoordsInteriores[i].y);
+                        GLDraw::Vertex2d(m_VInteriores[i].x, m_VInteriores[i].y);
                 }
 
                 if (m_NumVertices > 0) {
-                        glTexCoord2d(m_VCoordsInteriores[0].x, m_VCoordsInteriores[0].y);
-                        glVertex2d(m_VInteriores[0].x, m_VInteriores[0].y);
+                        GLDraw::TexCoord2d(m_VCoordsInteriores[0].x, m_VCoordsInteriores[0].y);
+                        GLDraw::Vertex2d(m_VInteriores[0].x, m_VInteriores[0].y);
                 }
 
-                glEnd();
+                GLDraw::End();
 
                 glBindTexture(GL_TEXTURE_2D, 0);
-                glDisable(GL_TEXTURE_2D);
+                GLDraw::Disable(GL_TEXTURE_2D);
 
-                glDisable(GL_SCISSOR_TEST);
+                GLDraw::Disable(GL_SCISSOR_TEST);
 
 
-                glColor4f(0.0f, 0.5f, 0.0f, 1.0f);
-                glLineWidth(1.0f);
+                GLDraw::Color4f(0.0f, 0.5f, 0.0f, 1.0f);
+                GLDraw::LineWidth(1.0f);
 
         }
 
-        glEnable(GL_BLEND);
+        GLDraw::Enable(GL_BLEND);
 
         // Dibujado de la lupa transparente
-        glColor4f(0.2f, 0.2f, 0.2f, 1.0f);
-        glBegin(GL_QUAD_STRIP);
+        GLDraw::Color4f(0.2f, 0.2f, 0.2f, 1.0f);
+        GLDraw::Begin(GL_QUAD_STRIP);
         for (unsigned int i = 0; i < m_NumVertices; i++) {
-                glVertex2d( m_VInteriores[i].x,m_VInteriores[i].y);
-                glVertex2d( m_VExteriores[i].x,m_VExteriores[i].y);
+                GLDraw::Vertex2d( m_VInteriores[i].x,m_VInteriores[i].y);
+                GLDraw::Vertex2d( m_VExteriores[i].x,m_VExteriores[i].y);
         }
         if (m_NumVertices > 0) {
-                glVertex2d( m_VInteriores[0].x,m_VInteriores[0].y);
-                glVertex2d( m_VExteriores[0].x,m_VExteriores[0].y);
+                GLDraw::Vertex2d( m_VInteriores[0].x,m_VInteriores[0].y);
+                GLDraw::Vertex2d( m_VExteriores[0].x,m_VExteriores[0].y);
         }
 
-        glEnd();
+        GLDraw::End();
 
         // Dibujado de detalles
 
-        glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
-        glBegin(GL_LINE_LOOP);
+        GLDraw::Color4f(0.0f, 0.0f, 0.0f, 1.0f);
+        GLDraw::Begin(GL_LINE_LOOP);
         for (unsigned int i = 0; i < m_NumVertices; i++) {
-                glVertex2d( m_VInteriores[i].x,m_VInteriores[i].y);
+                GLDraw::Vertex2d( m_VInteriores[i].x,m_VInteriores[i].y);
         }
-        glEnd();
+        GLDraw::End();
 
         GNC::GCS::Vector rot = GNC::GCS::Vector::VectorDeRotacion(m_AnguloPosAsa);
         float radio = m_GrosorMangoPantalla;
@@ -651,51 +654,51 @@ void GNC::GCS::Widgets::WLupa::Render(GNC::GCS::Contexto3D* c)
                 GNC::GCS::Vector ort = p.VectorOrtonormal() * 10.0f * (1.0f - inc) * escala;
                 GNC::GCS::Vector p0 = m_Centro + p - ort;
                 GNC::GCS::Vector p1 = m_Centro + p + ort;
-                glColor4f(1.0f, 1.0f, 1.0f, 0.2f);
-                glBegin(GL_LINES);
-                glVertex2d(p0.x, p0.y);
-                glVertex2d(p1.x, p1.y);
-                glEnd();
+                GLDraw::Color4f(1.0f, 1.0f, 1.0f, 0.2f);
+                GLDraw::Begin(GL_LINES);
+                GLDraw::Vertex2d(p0.x, p0.y);
+                GLDraw::Vertex2d(p1.x, p1.y);
+                GLDraw::End();
 
                 p = prayas + (rot * (escala + m_GrosorLupaPantalla + (inc * radio)));
                 ort = p.VectorOrtonormal() * 10.0f * (1.0f - inc) * escala;
                 p0 = m_Centro + p - ort;
                 p1 = m_Centro + p + ort;
-                glColor4f(0.0f, 0.0f, 0.0f, 0.2f);
-                glBegin(GL_LINES);
-                glVertex2d(p0.x, p0.y);
-                glVertex2d(p1.x, p1.y);
-                glEnd();
+                GLDraw::Color4f(0.0f, 0.0f, 0.0f, 0.2f);
+                GLDraw::Begin(GL_LINES);
+                GLDraw::Vertex2d(p0.x, p0.y);
+                GLDraw::Vertex2d(p1.x, p1.y);
+                GLDraw::End();
         }
 
         // Dibujado del outline de iluminacion/seleccion
 
-        glLineWidth(m_LineWidthProp);
+        GLDraw::LineWidth(m_LineWidthProp);
         if (m_Seleccionado || m_Iluminado) {
                 wAplicarColor(m_Iluminado, m_MouseDown, m_Seleccionado);
         } else {
-                glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+                GLDraw::Color4f(0.0f, 0.0f, 0.0f, 1.0f);
         }
 
-        glBegin(GL_LINE_LOOP);
+        GLDraw::Begin(GL_LINE_LOOP);
 
         for (unsigned int i = 0; i < m_NumVertices; i++) {
-                glVertex2d( m_VExteriores[i].x,m_VExteriores[i].y);
+                GLDraw::Vertex2d( m_VExteriores[i].x,m_VExteriores[i].y);
         }
 
-        glEnd();
+        GLDraw::End();
 
-        glPointSize(5.0f);
+        GLDraw::PointSize(5.0f);
         if (m_Seleccionado) {
-                glColor4f(1.0f, 1.0f, 0.0f, 0.25f);
+                GLDraw::Color4f(1.0f, 1.0f, 0.0f, 0.25f);
         } else if (m_Iluminado) {
-                glColor4f(1.0f, 1.0f, 0.0f, 0.25f);
+                GLDraw::Color4f(1.0f, 1.0f, 0.0f, 0.25f);
         } else {
-                glColor4f(0.0f, 0.0f, 0.0f, 0.25f);
+                GLDraw::Color4f(0.0f, 0.0f, 0.0f, 0.25f);
         }
-        glBegin(GL_POINTS);
-        glVertex2d(m_Centro.x, m_Centro.y);
-        glEnd();
+        GLDraw::Begin(GL_POINTS);
+        GLDraw::Vertex2d(m_Centro.x, m_Centro.y);
+        GLDraw::End();
 
         glFlush();
 }

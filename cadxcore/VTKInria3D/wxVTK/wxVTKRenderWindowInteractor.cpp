@@ -37,6 +37,7 @@ PURPOSE.  See the above copyright notice for more information.
 #include "vtkCommand.h"
 #include "vtkCallbackCommand.h"
 #include "vtkGenericOpenGLRenderWindow.h"
+#include "vtkRendererCollection.h"
 #include <GL/glx.h>
 
 #include <vtk/vtkginkgoimageviewer.h>
@@ -821,6 +822,17 @@ void wxVTKRenderWindowInteractor::Render()
                                 return;
                         }
                         firstRender = true;
+                }
+
+                // VTK 9 clears to the background colour with alpha 0 by
+                // default. Copied to this canvas, a transparent background
+                // leaves earlier frames visible wherever nothing is drawn
+                // (trails when panning or zooming), so make it opaque.
+                vtkRendererCollection* renderers = RenderWindow->GetRenderers();
+                vtkCollectionSimpleIterator rit;
+                renderers->InitTraversal(rit);
+                while (vtkRenderer* renderer = renderers->GetNextRenderer(rit)) {
+                        renderer->SetBackgroundAlpha(1.0);
                 }
 
                 CalcularRelacionPixelsPantalla(FindPokedRenderer(0,0));

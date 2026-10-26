@@ -54,6 +54,9 @@
 
 #include <widgets/openglhelper.h>
 #include <cairo/cairo.h>
+#include <vtk/gldraw.h>
+
+namespace GLDraw = GNC::GCS::GLDraw;
 
 #if defined(_GINKGO_DEBUG)
 #define DEBUG_PRECISION
@@ -272,11 +275,11 @@ public:
 
 
                 if (c->RefRelacionImagenPantalla().x > GRAPH_FAR_THRESHOLD ) {
-                        glColor4d(GRAPH_LINE_COLOR_FAR);
-                        glLineWidth(GRAPH_LINE_WIDTH_FAR);
+                        GLDraw::Color4d(GRAPH_LINE_COLOR_FAR);
+                        GLDraw::LineWidth(GRAPH_LINE_WIDTH_FAR);
                 } else {
-                        glColor4d(GRAPH_LINE_COLOR);
-                        glLineWidth(GRAPH_LINE_WIDTH);
+                        GLDraw::Color4d(GRAPH_LINE_COLOR);
+                        GLDraw::LineWidth(GRAPH_LINE_WIDTH);
                 }
 
                 //draw reference...
@@ -285,7 +288,7 @@ public:
                         //2 squares of 0.2 sec
                         float referenceWidth = Info.SamplingFrecuency * REFERENCE_WIDTH;
                         if (!Info.Samples.empty()) {
-                                glBegin(GL_LINE_STRIP);
+                                GLDraw::Begin(GL_LINE_STRIP);
                                 do {
                                         if ((i < referenceWidth/4) || (i >3*referenceWidth/4)) {
                                                 sample = Pos + (GNC::GCS::Vector(i, 0) * Rel);
@@ -293,19 +296,19 @@ public:
                                                 sample = Pos + (GNC::GCS::Vector(i, -100) * Rel);
                                                 //sample += GNC::GCS::Vector(0, -10.0f);
                                         }
-                                        glVertex3d( sample.x, sample.y, 0.0);
+                                        GLDraw::Vertex3d( sample.x, sample.y, 0.0);
                                 } while (++i < referenceWidth);
-                                glEnd();
+                                GLDraw::End();
                         }
                 }
 
-                glBegin(GL_LINE_STRIP);
+                GLDraw::Begin(GL_LINE_STRIP);
                 for (GNKVisualizator::ChannelInfo::TVectorSamples::const_iterator it = Info.Samples.begin(); it != Info.Samples.end(); ++it, ++i) {
                         sample = Pos + (GNC::GCS::Vector(i, -(*it) * Info.Multiplier * Info.Sensitivity * Info.SensitivityCorrectionFactor) * Rel);
-                        glVertex3d( sample.x, sample.y, 0.0);
+                        GLDraw::Vertex3d( sample.x, sample.y, 0.0);
 
                 }
-                glEnd();
+                GLDraw::End();
         }
 
         double sx;
@@ -521,63 +524,63 @@ void GNKVisualizator::Widgets::WECG::Render(GNC::GCS::Contexto3D* c)
                 glClearColor(COLOR_FONDO);
                 glClear(GL_COLOR_BUFFER_BIT);
                 /*
-                glBegin(GL_QUADS);
-                glVertex2d(0.0, 0.0);
-                glVertex2d(0.0, dimsImagen.y);
-                glVertex2d(dimsImagen.x, dimsImagen.y);
-                glVertex2d(dimsImagen.x, 0.0);
-                glEnd();
+                GLDraw::Begin(GL_QUADS);
+                GLDraw::Vertex2d(0.0, 0.0);
+                GLDraw::Vertex2d(0.0, dimsImagen.y);
+                GLDraw::Vertex2d(dimsImagen.x, dimsImagen.y);
+                GLDraw::Vertex2d(dimsImagen.x, 0.0);
+                GLDraw::End();
                 */
                 step.Asignar(1.0 / spacing.x, 1.0 / spacing.y);
 
                 if (c->RefRelacionImagenPantalla().x < GRID_1MM_NEAR_THRESHOLD) {
 
-                        glLineWidth(GRID_1MM_LINE_WIDTH);
-                        glColor4f(GRID_1MM_LINE_COLOR);
-                        glBegin(GL_LINES);
+                        GLDraw::LineWidth(GRID_1MM_LINE_WIDTH);
+                        GLDraw::Color4f(GRID_1MM_LINE_COLOR);
+                        GLDraw::Begin(GL_LINES);
                         for (double x = win[0].x; x < win[1].x; x += step.x) {
-                                glVertex2d(x, win[0].y);
-                                glVertex2d(x, win[1].y);
+                                GLDraw::Vertex2d(x, win[0].y);
+                                GLDraw::Vertex2d(x, win[1].y);
                         }
                         for (double y = win[0].y; y < win[1].y; y += step.y) {
-                                glVertex2d(win[0].x, y);
-                                glVertex2d(win[1].x, y);
+                                GLDraw::Vertex2d(win[0].x, y);
+                                GLDraw::Vertex2d(win[1].x, y);
                         }
-                        glEnd();
+                        GLDraw::End();
                 }
 
                 step *= 5.0f;
 
 
                 if (c->RefRelacionImagenPantalla().x > GRID_5MM_FAR_THRESHOLD) {
-                        glLineWidth(GRID_5MM_LINE_WIDTH_FAR);
-                        glColor4f(GRID_5MM_LINE_COLOR_FAR);
+                        GLDraw::LineWidth(GRID_5MM_LINE_WIDTH_FAR);
+                        GLDraw::Color4f(GRID_5MM_LINE_COLOR_FAR);
                 } else {
-                        glLineWidth(GRID_5MM_LINE_WIDTH);
-                        glColor4f(GRID_5MM_LINE_COLOR);
+                        GLDraw::LineWidth(GRID_5MM_LINE_WIDTH);
+                        GLDraw::Color4f(GRID_5MM_LINE_COLOR);
                 }
 
-                glBegin(GL_LINES);
+                GLDraw::Begin(GL_LINES);
                 for (double x = win[0].x; x <= win[1].x; x += step.x) {
-                        glVertex2d(x, win[0].y);
-                        glVertex2d(x, win[1].y);
+                        GLDraw::Vertex2d(x, win[0].y);
+                        GLDraw::Vertex2d(x, win[1].y);
                 }
                 for (double y = win[0].y; y <= win[1].y; y += step.y) {
-                        glVertex2d(win[0].x, y);
-                        glVertex2d(win[1].x, y);
+                        GLDraw::Vertex2d(win[0].x, y);
+                        GLDraw::Vertex2d(win[1].x, y);
                 }
-                glEnd();
+                GLDraw::End();
 
                 /*
-                glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
-                glLineWidth(2.0f);
-                glBegin(GL_LINE_LOOP);
-                glVertex2d(0.0, 0.0);
-                glVertex2d(dims[0], 0.0);
-                glVertex2d(dims[0], dims[1]);
-                glVertex2d(0.0, dims[1]);
-                glVertex2d(0.0, 0.0);
-                glEnd();
+                GLDraw::Color4f(0.0f, 0.0f, 0.0f, 1.0f);
+                GLDraw::LineWidth(2.0f);
+                GLDraw::Begin(GL_LINE_LOOP);
+                GLDraw::Vertex2d(0.0, 0.0);
+                GLDraw::Vertex2d(dims[0], 0.0);
+                GLDraw::Vertex2d(dims[0], dims[1]);
+                GLDraw::Vertex2d(0.0, dims[1]);
+                GLDraw::Vertex2d(0.0, 0.0);
+                GLDraw::End();
                 */
         }
 

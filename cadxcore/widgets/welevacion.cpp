@@ -34,6 +34,20 @@
 #include <vtkImageData.h>
 #include <vtk/vtkginkgoimageviewer.h>
 #include <vtkImageActor.h>
+#include <vtk/gldraw.h>
+
+namespace GLDraw = GNC::GCS::GLDraw;
+
+// Filled circle of the given radius centred on the origin
+static void DrawCachedCircle(float radius)
+{
+        GLDraw::Begin(GL_TRIANGLE_FAN);
+        const float step = M_2PI / 30;
+        for (float angulo = 0; angulo < M_2PI; angulo += step) {
+                GLDraw::Vertex3f(radius * cos(angulo), radius * sin(angulo), 0.0f);
+        }
+        GLDraw::End();
+}
 
 //region "Implementacion de WElevacionBuilder"
 
@@ -176,12 +190,12 @@ void GNC::GCS::Widgets::WElevacionBuilder::Render(GNC::GCS::Contexto3D* /*c*/)
                 }
                 glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
                 for(TipoIteradorListaNodos it=m_Nodos.begin(); it!=m_Nodos.end(); ++it) {
-                        glMatrixMode(GL_MODELVIEW);
-                        glPushMatrix();
-                        glTranslatef((*it)->x, (*it)->y, 0.0f);
-                        glColor4f(m_pRepActiva->colorCircunferencia.r, m_pRepActiva->colorCircunferencia.g, m_pRepActiva->colorCircunferencia.b, m_pRepActiva->colorCircunferencia.a);
-                        glCallList(m_LIndex);
-                        glPopMatrix();
+                        GLDraw::MatrixMode(GL_MODELVIEW);
+                        GLDraw::PushMatrix();
+                        GLDraw::Translatef((*it)->x, (*it)->y, 0.0f);
+                        GLDraw::Color4f(m_pRepActiva->colorCircunferencia.r, m_pRepActiva->colorCircunferencia.g, m_pRepActiva->colorCircunferencia.b, m_pRepActiva->colorCircunferencia.a);
+                        DrawCachedCircle(m_RadioCacheado);
+                        GLDraw::PopMatrix();
                 }
         } else {
                 if (m_Dentro) {
@@ -189,12 +203,12 @@ void GNC::GCS::Widgets::WElevacionBuilder::Render(GNC::GCS::Contexto3D* /*c*/)
                                 BuildDisplayList();
                         }
                         glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-                        glMatrixMode(GL_MODELVIEW);
-                        glPushMatrix();
-                        glTranslatef(m_NodoMoviendose.x, m_NodoMoviendose.y, 0.0f);
-                        glColor4f(m_pRepActiva->colorCircunferencia.r, m_pRepActiva->colorCircunferencia.g, m_pRepActiva->colorCircunferencia.b, m_pRepActiva->colorCircunferencia.a);
-                        glCallList(m_LIndex);
-                        glPopMatrix();
+                        GLDraw::MatrixMode(GL_MODELVIEW);
+                        GLDraw::PushMatrix();
+                        GLDraw::Translatef(m_NodoMoviendose.x, m_NodoMoviendose.y, 0.0f);
+                        GLDraw::Color4f(m_pRepActiva->colorCircunferencia.r, m_pRepActiva->colorCircunferencia.g, m_pRepActiva->colorCircunferencia.b, m_pRepActiva->colorCircunferencia.a);
+                        DrawCachedCircle(m_RadioCacheado);
+                        GLDraw::PopMatrix();
                 }
         }
 }
@@ -214,40 +228,15 @@ void GNC::GCS::Widgets::WElevacionBuilder::BuildDisplayList()
         if (m_pRepActiva == NULL ) {
                 return;
         }
-        if (m_ListaCreada) {
-                glDeleteLists(m_LIndex, 1);
-        }
-
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glLoadIdentity();
-
-        m_LIndex = glGenLists(1);
-        m_ListaCreada = true;
-
-        glNewList(m_LIndex, GL_COMPILE);
-
-        glBegin(GL_TRIANGLE_FAN);
-        float step = M_2PI / 30;
+        // This used to compile the circle into an OpenGL display list, which
+        // core profiles don't have; now only the radius is cached and
+        // DrawCachedCircle draws it.
         m_RadioCacheado = m_pRepActiva->m_RadioCircunferencia;
-
-        for ( float angulo = 0; angulo < M_2PI; angulo += step) {
-                glVertex3f(m_RadioCacheado * cos (angulo) , m_RadioCacheado * sin (angulo), 0.0f);
-
-        }
-        glEnd();
-
-        glEndList();
-
-        glPopMatrix();
-
+        m_ListaCreada = true;
 }
 
 void GNC::GCS::Widgets::WElevacionBuilder::DestroyDisplayList()
 {
-        if (m_ListaCreada) {
-                glDeleteLists(m_LIndex, 1);
-                m_ListaCreada = false;
-        }
+        m_ListaCreada = false;
 }
 

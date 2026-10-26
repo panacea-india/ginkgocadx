@@ -36,6 +36,9 @@
 
 #include <cairo/cairo.h>
 #include "openglhelper.h"
+#include <vtk/gldraw.h>
+
+namespace GLDraw = GNC::GCS::GLDraw;
 
 
 //region "Implementacion de WFlechaBuilder"
@@ -399,7 +402,7 @@ void GNC::GCS::Widgets::WFlecha::Render(GNC::GCS::Contexto3D* c)
 
         const GNC::GCS::Vector& escala = c->RelacionImagenPantalla();
 
-        glLineWidth(m_LineWidthProp);
+        GLDraw::LineWidth(m_LineWidthProp);
 
         if (m_Vertices[0].m_Iluminado) {
                 wDibujarElipseDegradado(m_Vertices[0], wRadioPuntoIluminado * escala, wColorPuntoIluminadoInterior, wColorPuntoIluminadoExterior);
@@ -429,60 +432,60 @@ void GNC::GCS::Widgets::WFlecha::Render(GNC::GCS::Contexto3D* c)
         //------------------------------------------------------------------------------------------
         // Sombra del cuerpo de la flecha
         wColorSombra.Aplicar();
-        glBegin(GL_LINES);
-        glVertex2d(m_Vertices[0].x + fsombrax, m_Vertices[0].y - fsombray);
-        glVertex2d(m_Vertices[1].x + fsombrax, m_Vertices[1].y - fsombray);
-        glEnd();
+        GLDraw::Begin(GL_LINES);
+        GLDraw::Vertex2d(m_Vertices[0].x + fsombrax, m_Vertices[0].y - fsombray);
+        GLDraw::Vertex2d(m_Vertices[1].x + fsombrax, m_Vertices[1].y - fsombray);
+        GLDraw::End();
 
         // Sombra de las aspas de la flecha
-        glBegin(GL_LINE_STRIP);
-        glVertex2d(f0.x + fsombrax, f0.y - fsombray);
-        glVertex2d(m_Vertices[1].x + fsombrax, m_Vertices[1].y - fsombray);
-        glVertex2d(f1.x + fsombrax, f1.y - fsombray);
-        glEnd();
+        GLDraw::Begin(GL_LINE_STRIP);
+        GLDraw::Vertex2d(f0.x + fsombrax, f0.y - fsombray);
+        GLDraw::Vertex2d(m_Vertices[1].x + fsombrax, m_Vertices[1].y - fsombray);
+        GLDraw::Vertex2d(f1.x + fsombrax, f1.y - fsombray);
+        GLDraw::End();
 
         // Sombra de la cola
-        glPointSize(WIDGET_SIZE_PUNTO);
-        glBegin(GL_POINTS);
-        glVertex2d(m_Vertices[0].x + fsombrax, m_Vertices[0].y - fsombray);
-        glEnd();
+        GLDraw::PointSize(WIDGET_SIZE_PUNTO);
+        GLDraw::Begin(GL_POINTS);
+        GLDraw::Vertex2d(m_Vertices[0].x + fsombrax, m_Vertices[0].y - fsombray);
+        GLDraw::End();
 
         // Dibujado de la flecha
 
         // Cuerpo
         wAplicarColor(m_Iluminado, m_MouseDown, m_Seleccionado);
-        glBegin(GL_LINES);
-        glVertex2d(m_Vertices[0].x, m_Vertices[0].y);
-        glVertex2d(m_Vertices[1].x, m_Vertices[1].y);
-        glEnd();
+        GLDraw::Begin(GL_LINES);
+        GLDraw::Vertex2d(m_Vertices[0].x, m_Vertices[0].y);
+        GLDraw::Vertex2d(m_Vertices[1].x, m_Vertices[1].y);
+        GLDraw::End();
 
         // Aspas
         wAplicarColor(m_Iluminado || m_Vertices[1].m_Iluminado, m_MouseDown, m_Seleccionado);
-        glBegin(GL_LINE_STRIP);
-        glVertex2d(f0.x, f0.y);
-        glVertex2d(m_Vertices[1].x, m_Vertices[1].y);
-        glVertex2d(f1.x, f1.y);
-        glEnd();
+        GLDraw::Begin(GL_LINE_STRIP);
+        GLDraw::Vertex2d(f0.x, f0.y);
+        GLDraw::Vertex2d(m_Vertices[1].x, m_Vertices[1].y);
+        GLDraw::Vertex2d(f1.x, f1.y);
+        GLDraw::End();
 
         // Cola
         wAplicarColor(m_Iluminado || m_Vertices[0].m_Iluminado, m_MouseDown, m_Seleccionado);
         if (m_Seleccionado && m_MouseDown)
-                glPointSize(WIDGET_SIZE_PUNTO * WIDGET_INCREMENTO_DETALLE_SELECCIONADO);
+                GLDraw::PointSize(WIDGET_SIZE_PUNTO * WIDGET_INCREMENTO_DETALLE_SELECCIONADO);
         else
-                glPointSize(WIDGET_SIZE_PUNTO);
+                GLDraw::PointSize(WIDGET_SIZE_PUNTO);
 
-        glBegin(GL_POINTS);
-        glVertex2d(m_Vertices[0].x, m_Vertices[0].y);
-        glEnd();
+        GLDraw::Begin(GL_POINTS);
+        GLDraw::Vertex2d(m_Vertices[0].x, m_Vertices[0].y);
+        GLDraw::End();
 
 
         //------------------------------------------------------------------------------------------
         // Dibujado de la linea punteada de arrastre
         if (m_MouseDown) {
-                glLineWidth(m_DraggingLineWidthProp);
-                glEnable(GL_LINE_STIPPLE);
+                GLDraw::LineWidth(m_DraggingLineWidthProp);
+                GLDraw::Enable(GL_LINE_STIPPLE);
                 wColorLineaArrastre.Aplicar();
-                glLineStipple(3, 0xAAAA);
+                GLDraw::LineStipple(3, 0xAAAA);
 
                 GNC::GCS::Vector startPoint, endPoint;
                 if (m_Vertices[0].m_Seleccionado) {
@@ -496,12 +499,12 @@ void GNC::GCS::Widgets::WFlecha::Render(GNC::GCS::Contexto3D* c)
                         endPoint = m_Centro;
                 }
 
-                glBegin(GL_LINE_STRIP);
-                glVertex2d(startPoint.x, startPoint.y);
-                glVertex2d(endPoint.x, endPoint.y);
-                glEnd();
+                GLDraw::Begin(GL_LINE_STRIP);
+                GLDraw::Vertex2d(startPoint.x, startPoint.y);
+                GLDraw::Vertex2d(endPoint.x, endPoint.y);
+                GLDraw::End();
 
-                glDisable(GL_LINE_STIPPLE);
+                GLDraw::Disable(GL_LINE_STIPPLE);
         }
 }
 

@@ -26,6 +26,9 @@
 #endif
 #include <vtk_glew.h>
 #include <cairo/cairo.h>
+#include <vtk/gldraw.h>
+
+namespace GLDraw = GNC::GCS::GLDraw;
 
 GNC::GCS::Widgets::StripDescription::StripDescription(GNC::GCS::Vector position, GNC::GCS::Vector size):
         rasterPosition(position),
@@ -68,12 +71,12 @@ void GNC::GCS::Widgets::StripTextRenderer::Render(const std::string& text, const
         quadRaster[0].x = rasterPos.x;
         quadRaster[0].y = rasterPos.y;
 
-        glEnable(GL_TEXTURE_2D);
+        GLDraw::Enable(GL_TEXTURE_2D);
 
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        GLDraw::Color4f(1.0f, 1.0f, 1.0f, 1.0f);
         glBindTexture(GL_TEXTURE_2D, tc.idTextura);
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-        glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
+        GLDraw::TexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+        GLDraw::Hint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
 
         for (std::string::const_iterator it1 = text.begin(); it1 != text.end(); it1++) {
                 if (m_CharMap.find((*it1)) == m_CharMap.end()) {
@@ -93,19 +96,19 @@ void GNC::GCS::Widgets::StripTextRenderer::Render(const std::string& text, const
                 quadRaster[3].y = quadRaster[2].y;
                 //texture position 0.0,1.0
 
-                glBegin(GL_QUADS);
-                glTexCoord2d(sd.textPosition.x, sd.textPosition.y);
-                glVertex2d(quadRaster[0].x, quadRaster[0].y);
+                GLDraw::Begin(GL_QUADS);
+                GLDraw::TexCoord2d(sd.textPosition.x, sd.textPosition.y);
+                GLDraw::Vertex2d(quadRaster[0].x, quadRaster[0].y);
 
-                glTexCoord2d(sd.textPosition.x + sd.textSize.x, sd.textPosition.y);
-                glVertex2d(quadRaster[1].x, quadRaster[1].y);
+                GLDraw::TexCoord2d(sd.textPosition.x + sd.textSize.x, sd.textPosition.y);
+                GLDraw::Vertex2d(quadRaster[1].x, quadRaster[1].y);
 
-                glTexCoord2d(sd.textPosition.x + sd.textSize.x, sd.textPosition.y + sd.textSize.y);
-                glVertex2d(quadRaster[2].x, quadRaster[2].y);
+                GLDraw::TexCoord2d(sd.textPosition.x + sd.textSize.x, sd.textPosition.y + sd.textSize.y);
+                GLDraw::Vertex2d(quadRaster[2].x, quadRaster[2].y);
 
-                glTexCoord2d(sd.textPosition.x, sd.textPosition.y + sd.textSize.y);
-                glVertex2d(quadRaster[3].x, quadRaster[3].y);
-                glEnd();
+                GLDraw::TexCoord2d(sd.textPosition.x, sd.textPosition.y + sd.textSize.y);
+                GLDraw::Vertex2d(quadRaster[3].x, quadRaster[3].y);
+                GLDraw::End();
 
                 //increments raster position...
                 if (leftAlign) {
@@ -114,7 +117,7 @@ void GNC::GCS::Widgets::StripTextRenderer::Render(const std::string& text, const
         }
 
         glBindTexture(GL_TEXTURE_2D, 0);
-        glDisable(GL_TEXTURE_2D);
+        GLDraw::Disable(GL_TEXTURE_2D);
 }
 
 void GNC::GCS::Widgets::StripTextRenderer::Update(const std::string& strip, const GNC::GCS::GLHelper::TColor& color, double fontSize, bool drawShadow)
