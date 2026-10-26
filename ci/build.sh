@@ -3,6 +3,10 @@
 # the container described by ci/Dockerfile.
 #
 # Usage: ci/build.sh [Release|Debug] [build-dir]
+# JOBS limits the number of parallel compile jobs (default: all cores); lower it
+# if the build runs out of memory.
+# Extra CMake arguments can be passed in CMAKE_ARGS. If VTK_DIR is set (the
+# bookworm image does this for its source-built VTK) it is passed to CMake.
 set -eu
 
 BUILD_TYPE="${1:-Release}"
@@ -21,6 +25,8 @@ cmake -S . -B "$BUILD_DIR" \
     -DCMAKE_CXX_FLAGS="$CPPFLAGS $CXXFLAGS" \
     -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS" \
     -DCMAKE_SHARED_LINKER_FLAGS="$LDFLAGS" \
-    -DCMAKE_MODULE_LINKER_FLAGS="$LDFLAGS"
+    -DCMAKE_MODULE_LINKER_FLAGS="$LDFLAGS" \
+    ${VTK_DIR:+-DVTK_DIR="$VTK_DIR"} \
+    ${CMAKE_ARGS:-}
 
-cmake --build "$BUILD_DIR" -- -j"$(nproc)"
+cmake --build "$BUILD_DIR" -- -j"${JOBS:-$(nproc)}"

@@ -182,15 +182,37 @@ OFCondition GIL::DICOM::DCMTK::Network::ASC_ConnectAssociation(Association* asso
                 if (tLayer == NULL) {
                         return makeOFCondition(OFM_dcmtls, DULC_TLSERROR, OF_error, "TLS Error: Unable to create TLS transport layer");
                 }
-                tLayer->setCertificateFromString(assoc->GetCliCert());
-                tLayer->setPrivateKeyFromString(assoc->GetCliKey());
+                if (!assoc->GetCliCert().empty()) {
+                        OFCondition certCond = tLayer->setCertificateFromString(assoc->GetCliCert());
+                        if (certCond.bad()) {
+                                OFString msg("TLS Error: Unable to load client certificate: ");
+                                msg += certCond.text();
+                                delete tLayer;
+                                return makeOFCondition(OFM_dcmtls, DULC_TLSERROR, OF_error, msg.c_str());
+                        }
+                }
+                if (!assoc->GetCliKey().empty()) {
+                        OFCondition keyCond = tLayer->setPrivateKeyFromString(assoc->GetCliKey());
+                        if (keyCond.bad()) {
+                                OFString msg("TLS Error: Unable to load client private key: ");
+                                msg += keyCond.text();
+                                delete tLayer;
+                                return makeOFCondition(OFM_dcmtls, DULC_TLSERROR, OF_error, msg.c_str());
+                        }
+                }
 
                 if (! tLayer->checkPrivateKeyMatchesCertificate()) {
                         delete tLayer;
                         return makeOFCondition(OFM_dcmtls, DULC_TLSERROR, OF_error, "TLS Error: Private key and certificate do not match");
                 }
 
-                tLayer->addSystemTrustedCertificates();
+                OFCondition trustCond = tLayer->addSystemTrustedCertificates();
+                if (trustCond.bad()) {
+                        OFString msg("TLS Error: Unable to load system trusted certificates: ");
+                        msg += trustCond.text();
+                        delete tLayer;
+                        return makeOFCondition(OFM_dcmtls, DULC_TLSERROR, OF_error, msg.c_str());
+                }
 
                 if (assoc->GetValidate()) {
                         tLayer->setCertificateVerification(DCV_requireCertificate);

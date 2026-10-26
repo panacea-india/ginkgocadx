@@ -62,8 +62,8 @@
 #include <wx/thread.h>
 
 #include <itkImage.h>
-#include <itkExceptionObject.h>
-#include <itkExceptionObject.h>
+#include <itkMacro.h>
+#include <itkMacro.h>
 #include <itkSmartPointer.h>
 #include <vtkInformation.h>
 #include <vtkAlgorithmOutput.h>

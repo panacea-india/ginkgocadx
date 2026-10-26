@@ -126,15 +126,31 @@ OFCondition GIL::DICOM::Service::Start()
                         //return 1;
                         return EC_IllegalParameter;
                 }
-                m_pTLSLayer->setCertificateFromString(GetCliCert());
-                m_pTLSLayer->setPrivateKeyFromString(GetCliKey());
+                if (!GetCliCert().empty()) {
+                        OFCondition certCond = m_pTLSLayer->setCertificateFromString(GetCliCert());
+                        if (certCond.bad()) {
+                                LOG_ERROR(ambitolog, _Std("Unable to load client certificate: ") << certCond.text());
+                                return EC_IllegalParameter;
+                        }
+                }
+                if (!GetCliKey().empty()) {
+                        OFCondition keyCond = m_pTLSLayer->setPrivateKeyFromString(GetCliKey());
+                        if (keyCond.bad()) {
+                                LOG_ERROR(ambitolog, _Std("Unable to load client private key: ") << keyCond.text());
+                                return EC_IllegalParameter;
+                        }
+                }
 
                 if (! m_pTLSLayer->checkPrivateKeyMatchesCertificate()) {
                         LOG_ERROR(ambitolog, _Std("Private key and Certificate do not match"));
                         return EC_IllegalParameter;
                 }
 
-                m_pTLSLayer->addSystemTrustedCertificates();
+                OFCondition trustCond = m_pTLSLayer->addSystemTrustedCertificates();
+                if (trustCond.bad()) {
+                        LOG_ERROR(ambitolog, _Std("Unable to load system trusted certificates: ") << trustCond.text());
+                        return EC_IllegalParameter;
+                }
 
                 if (GetValidate()) {
                         m_pTLSLayer->setCertificateVerification(DCV_requireCertificate);

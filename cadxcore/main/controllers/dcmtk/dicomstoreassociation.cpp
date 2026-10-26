@@ -1044,7 +1044,7 @@ void DicomStoreAssociation::Store(ListaRutas listaFicheros, const GNC::GCS::Ptr<
                                 LOG_ERROR("C-STORE", strStream.str().c_str());
                         } else {
                                 bool found = false;
-                                for (OFIterator<OFString> itsc =sopClassUIDList.begin(); itsc != sopClassUIDList.end(); ++itsc) {
+                                for (OFListIterator(OFString) itsc =sopClassUIDList.begin(); itsc != sopClassUIDList.end(); ++itsc) {
                                         if ((*itsc).compare(sopClassUID) == 0) {
                                                 found = true;
                                                 break;
@@ -1086,8 +1086,24 @@ void DicomStoreAssociation::Store(ListaRutas listaFicheros, const GNC::GCS::Ptr<
                         errmsg(strStream.str(),true);
                         LOG_ERROR("C-STORE", strStream.str().c_str());
                 }
-                tLayer->setCertificateFromString(GetCliCert());
-                tLayer->setPrivateKeyFromString(GetCliKey());
+                if (!GetCliCert().empty()) {
+                        cond = tLayer->setCertificateFromString(GetCliCert());
+                        if (cond.bad()) {
+                                std::stringstream strStream;
+                                strStream << "unable to load client certificate: " << cond.text();
+                                errmsg(strStream.str(),true);
+                                LOG_ERROR("C-STORE", strStream.str().c_str());
+                        }
+                }
+                if (!GetCliKey().empty()) {
+                        cond = tLayer->setPrivateKeyFromString(GetCliKey());
+                        if (cond.bad()) {
+                                std::stringstream strStream;
+                                strStream << "unable to load client private key: " << cond.text();
+                                errmsg(strStream.str(),true);
+                                LOG_ERROR("C-STORE", strStream.str().c_str());
+                        }
+                }
 
                 if (! tLayer->checkPrivateKeyMatchesCertificate()) {
                         std::stringstream strStream;
@@ -1096,7 +1112,13 @@ void DicomStoreAssociation::Store(ListaRutas listaFicheros, const GNC::GCS::Ptr<
                         LOG_ERROR("C-STORE", strStream.str().c_str());
                 }
 
-                tLayer->addSystemTrustedCertificates();
+                cond = tLayer->addSystemTrustedCertificates();
+                if (cond.bad()) {
+                        std::stringstream strStream;
+                        strStream << "unable to load system trusted certificates: " << cond.text();
+                        errmsg(strStream.str(),true);
+                        LOG_ERROR("C-STORE", strStream.str().c_str());
+                }
 
                 if (GetValidate()) {
                         tLayer->setCertificateVerification(DCV_requireCertificate);

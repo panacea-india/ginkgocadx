@@ -71,7 +71,7 @@
 #include <vtkPolyDataMapper.h>
 
 #include <itkObject.h>
-#include <itkMultiThreader.h>
+#include <itkMultiThreaderBase.h>
 #if defined(_GINKGO_DEBUG) && !defined(OMITIR_VENTANA_ERRORES_VTK)
 #include <vtkObject.h>
 #endif
@@ -511,8 +511,8 @@ bool Ginkgo::OnInit()
         //ginkgocloud
         GNC::GCS::IControladorPermisos::Instance()->AddDefinicionPermiso("ginkgocloud",_Std("Ginkgo Cloud"), "download",_Std("Download from Ginkgo Cloud"),false, "", true);
 
-        itk::MultiThreader::SetGlobalDefaultNumberOfThreads(4);
-        itk::MultiThreader::SetGlobalMaximumNumberOfThreads(16);
+        itk::MultiThreaderBase::SetGlobalDefaultNumberOfThreads(4);
+        itk::MultiThreaderBase::SetGlobalMaximumNumberOfThreads(16);
 
         /*
         vtkPolyDataMapper* m = vtkPolyDataMapper::New();

@@ -20,8 +20,9 @@ BEGIN_EXTERN_C
 #include <windows.h>
 #include <winbase.h>
 #endif
-#include <openssl/rand.h>
 #include <openssl/err.h>
+#include <openssl/pem.h>
+#include <openssl/ssl.h>
 #include <openssl/x509_vfy.h>
 END_EXTERN_C
 
@@ -29,84 +30,61 @@ END_EXTERN_C
 #include "dcmtk/dcmtls/tlstrans.h"
 #include "dcmtk/dcmnet/dicom.h"
 
-OFBool GTLSTransportLayer::setTempDHParametersFromString(const std::string& /*params*/)
-{
-#if defined(USE_PATCHED_LIBS)
-        if (!transportLayerContext) {
-                return OFFalse; //TCS_illegalCall;
-        }
-        if (params.size()) {
-                std::cerr << "No implementado" << std::endl;
-        }
-#endif
-        return OFFalse;
-}
-
-
 GTLSTransportLayer::~GTLSTransportLayer()
 {
 
 }
 
-DcmTransportLayerStatus GTLSTransportLayer::setPrivateKeyFromString(const std::string& /*keyStr*/)
+OFCondition GTLSTransportLayer::setPrivateKeyFromString(const std::string& keyStr)
 {
-#if defined(USE_PATCHED_LIBS)
-        if (!transportLayerContext) {
-                return TCS_illegalCall;
+        SSL_CTX *ctx = getNativeHandle();
+        if (ctx == NULL) {
+                return makeOFCondition(OFM_dcmtls, 1, OF_error, "TLS context not available");
         }
 
-        int ret = 0;
-
-        EVP_PKEY* pkey = NULL;
-
-        BIO* bio = BIO_new_mem_buf((void*)keyStr.c_str(), -1);
-        PEM_read_bio_PrivateKey(bio, &pkey, NULL, NULL);
-        BIO_set_close(bio, BIO_NOCLOSE);
+        BIO *bio = BIO_new_mem_buf(keyStr.c_str(), static_cast<int>(keyStr.size()));
+        if (bio == NULL) {
+                return convertOpenSSLError(ERR_get_error(), OFTrue);
+        }
+        EVP_PKEY *pkey = PEM_read_bio_PrivateKey(bio, NULL, NULL, NULL);
         BIO_free(bio);
-
         if (pkey == NULL) {
-                std::cerr << "Error al leer el clave privada" << std::endl;
-                return TCS_tlsError;
+                return convertOpenSSLError(ERR_get_error(), OFTrue);
         }
 
-        ret = SSL_CTX_use_PrivateKey(transportLayerContext, pkey);
+        // SSL_CTX_use_PrivateKey takes its own reference to the key
+        int ret = SSL_CTX_use_PrivateKey(ctx, pkey);
         EVP_PKEY_free(pkey);
-
         if (ret <= 0) {
-                return TCS_tlsError;
+                return convertOpenSSLError(ERR_get_error(), OFTrue);
         }
-#endif
-        return TCS_ok;
+        return EC_Normal;
 }
 
-DcmTransportLayerStatus GTLSTransportLayer::setCertificateFromString(const std::string& /*certStr*/)
+OFCondition GTLSTransportLayer::setCertificateFromString(const std::string& certStr)
 {
-#if defined(USE_PATCHED_LIBS)
-        if (!transportLayerContext) {
-                return TCS_illegalCall;
+        SSL_CTX *ctx = getNativeHandle();
+        if (ctx == NULL) {
+                return makeOFCondition(OFM_dcmtls, 1, OF_error, "TLS context not available");
         }
 
-        int ret = 0;
-
-        X509* cert = NULL;
-
-        BIO* bio = BIO_new_mem_buf((void*)certStr.c_str(), -1);
-        PEM_read_bio_X509(bio, &cert, 0, NULL);
-
-        BIO_set_close(bio, BIO_NOCLOSE);
+        BIO *bio = BIO_new_mem_buf(certStr.c_str(), static_cast<int>(certStr.size()));
+        if (bio == NULL) {
+                return convertOpenSSLError(ERR_get_error(), OFTrue);
+        }
+        X509 *cert = PEM_read_bio_X509(bio, NULL, NULL, NULL);
         BIO_free(bio);
-
         if (cert == NULL) {
-                std::cerr << "Error al leer el certificado" << std::endl;
-                return TCS_tlsError;
+                return convertOpenSSLError(ERR_get_error(), OFTrue);
         }
 
-        ret = SSL_CTX_use_certificate(transportLayerContext, cert);
-        if (ret <= 0 ) {
-                return TCS_tlsError;
+        // SSL_CTX_use_certificate takes its own reference to the certificate
+        int ret = SSL_CTX_use_certificate(ctx, cert);
+        X509_free(cert);
+        if (ret <= 0) {
+                return convertOpenSSLError(ERR_get_error(), OFTrue);
         }
-#endif
-        return TCS_ok;
+        return EC_Normal;
 }
 
 #ifdef _WIN32
@@ -143,24 +121,17 @@ void LoadSystemTrustedCertificates(X509_STORE *store)
 #endif
 }
 
-DcmTransportLayerStatus GTLSTransportLayer::addSystemTrustedCertificates()
+OFCondition GTLSTransportLayer::addSystemTrustedCertificates()
 {
-#if defined(USE_PATCHED_LIBS)
-        if (!transportLayerContext) {
-                return TCS_illegalCall;
+        SSL_CTX *ctx = getNativeHandle();
+        if (ctx == NULL) {
+                return makeOFCondition(OFM_dcmtls, 1, OF_error, "TLS context not available");
         }
 
-        //int ret = 0;
-
-        X509_STORE* almacen = transportLayerContext->cert_store;
-        if(almacen != NULL) {
-                LoadSystemTrustedCertificates(almacen);
-        } else {
-                return TCS_tlsError;
+        X509_STORE *almacen = SSL_CTX_get_cert_store(ctx);
+        if (almacen == NULL) {
+                return convertOpenSSLError(ERR_get_error(), OFTrue);
         }
-#endif
-
-        return TCS_ok;
+        LoadSystemTrustedCertificates(almacen);
+        return EC_Normal;
 }
-
-

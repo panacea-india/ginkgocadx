@@ -57,12 +57,11 @@
 #include <vtkJPEGWriter.h>
 
 
-#include <itkExceptionObject.h>
+#include <itkMacro.h>
 #include <itkImage.h>
 #include <itkRGBPixel.h>
 #include <itkGDCMImageIO.h>
 #include <itkImageFileReader.h>
-#include <itkVectorResampleImageFilter.h>
 #include <itkLinearInterpolateImageFunction.h>
 #include <itkImageDuplicator.h>
 

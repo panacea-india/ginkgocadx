@@ -40,7 +40,7 @@
 #define I2DJPGS_H
 
 #include <dcmtk/dcmdata/dctk.h>
-#include "../ofstd/offile.h"
+#include <dcmtk/ofstd/offile.h>
 #include "i2dimgs.h"
 
 /**
@@ -351,7 +351,7 @@ protected:
         OFList<JPEGFileMapEntry*> m_jpegFileMap;
 
         /// The JPEG file, if opened
-        GinkgoOFFile jpegFile;
+        OFFile jpegFile;
 
         /// If true, JPEGs with progressive coding are not supported
         OFBool m_disableProgrTs;

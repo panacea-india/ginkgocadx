@@ -19,6 +19,7 @@
  */
 
 #include <vector>
+#include <wx/dcclient.h>
 #include <sstream>
 #include <limits>
 

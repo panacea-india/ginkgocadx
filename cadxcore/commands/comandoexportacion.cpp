@@ -53,7 +53,6 @@
 #include <itkGDCMImageIO.h>
 #include <itkJPEGImageIO.h>
 #include <itkPNGImageIO.h>
-#include <itkVectorResampleImageFilter.h>
 #include <itkLinearInterpolateImageFunction.h>
 #include <itkImageFileWriter.h>
 #include <api/istudycontext.h>

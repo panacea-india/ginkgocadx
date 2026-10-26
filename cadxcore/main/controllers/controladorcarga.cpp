@@ -53,7 +53,6 @@
 #include <itkGDCMSeriesFileNames.h>
 #include <itkGDCMImageIO.h>
 #include <itkImageSeriesReader.h>
-#include <itkVectorResampleImageFilter.h>
 #include <itkImageDuplicator.h>
 #include "streaming/streamingloader.h"
 

@@ -23,6 +23,7 @@
 
 #include "tls.h"
 
+#include <string>
 #include <dcmtk/dcmtls/tlslayer.h>
 
 /**
@@ -44,31 +45,19 @@ public:
         virtual ~GTLSTransportLayer();
 
         /** loads the private key used for authentication of this application from a string.
-        *  @param key The private key
-        *  @return TCS_ok if successful, an error code otherwise
+        *  @param key The private key, PEM encoded
+        *  @return EC_Normal if successful, an error condition otherwise
         */
-        DcmTransportLayerStatus setPrivateKeyFromString(const std::string& key);
+        OFCondition setPrivateKeyFromString(const std::string& key);
 
         /** loads the certificate (public key) used for authentication of this application from a string.
-        *  @param cert The certificate
-        *  @return TCS_ok if successful, an error code otherwise
+        *  @param cert The certificate, PEM encoded
+        *  @return EC_Normal if successful, an error condition otherwise
         */
-        DcmTransportLayerStatus setCertificateFromString(const std::string& cert);
+        OFCondition setCertificateFromString(const std::string& cert);
 
-        /** loads a certificate from a string and adds it to the pool of trusted certificates.
-        *  @param cert The certificate
-        *  @return TCS_ok if successful, an error code otherwise
+        /** adds the certificates the operating system trusts to the pool of trusted certificates.
+        *  @return EC_Normal if successful, an error condition otherwise
         */
-        DcmTransportLayerStatus addSystemTrustedCertificates();
-
-
-        /** loads a set of Diffie-Hellman parameters from a string.
-        *  These parameters are required for DH, DHE or DSS ciphersuites.
-        *  @param params DH parameter
-        *  @return OFTrue if successful, OFFalse otherwise.
-        */
-        OFBool setTempDHParametersFromString(const std::string& params);
-
-private:
-
+        OFCondition addSystemTrustedCertificates();
 };
