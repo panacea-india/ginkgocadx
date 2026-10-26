@@ -33,6 +33,11 @@ RUN printf '%s\n' \
       libwxgtk3.0-dev \
       libxml2-dev \
       libgdcm-tools \
+      locales \
+ && sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale.gen \
+ && locale-gen \
  && rm -rf /var/lib/apt/lists/*
+
+ENV LANG=en_US.UTF-8
 
 WORKDIR /src

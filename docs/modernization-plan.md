@@ -70,7 +70,8 @@ Build on the old stack in Docker so contributors have something that compiles.
 - [x] `ci/Dockerfile`: Debian 10 (buster) from archive.debian.org, with the
       same build dependencies as Debian's package
 - [x] `ci/build.sh`: configure and build with Debian's packaging flags
-- [ ] Verify the image and a full build on x86_64
+- [x] Verify the image and a full build on x86_64 (builds cleanly; the only
+      linker warning is `tempnam` in `incomingdicomassociationcommand.cpp`)
 - [ ] GitHub Actions workflow that builds the image and runs `ci/build.sh`
 - [ ] Remove `.travis.yml` and `model_ginkgo.cpp`
 - [ ] Raise `cmake_minimum_required` in all four `CMakeLists.txt` files
@@ -86,12 +87,26 @@ Findings so far:
   build environment is **x86_64 only**. Under emulation on Apple Silicon it is
   very slow; build on an x86 machine. arm64 is optional for now.
 
+- On Windows, git's `autocrlf` checks shell scripts out with CRLF, and `sh`
+  then fails on `set -eu`. `.gitattributes` forces LF for `*.sh`.
+
 To build:
 
 ```
 docker build -t ginkgocadx-build -f ci/Dockerfile ci
 docker run --rm -v "$PWD":/src ginkgocadx-build ci/build.sh
 ```
+
+To run the result on Windows 11 with Docker Desktop (WSL2 backend), using
+WSLg's X socket for the display:
+
+```
+docker run --rm -v "$PWD":/src \
+  -v /run/desktop/mnt/host/wslg/.X11-unix:/tmp/.X11-unix -e DISPLAY=:0 \
+  ginkgocadx-build ci/run.sh
+```
+
+On a Linux desktop, mount `/tmp/.X11-unix` and pass your own `DISPLAY` instead.
 
 ### Phase 1: the easier dependencies (weeks)
 
