@@ -74,10 +74,11 @@ SET_CUSTOM_wxWidgets_PACKAGE()
 ENDIF()
 
 IF(NOT USE_CUSTOM_VTK)
-  FIND_PACKAGE(VTK 7.0.0)
-  IF (NOT VTK_FOUND)
-    FIND_PACKAGE(VTK 6.2.0 REQUIRED)
-  ENDIF()
+  FIND_PACKAGE(VTK 9.0 REQUIRED COMPONENTS
+    CommonCore CommonDataModel CommonExecutionModel CommonMath CommonSystem
+    CommonTransforms FiltersSources ImagingColor ImagingCore ImagingMath IOImage
+    InteractionStyle RenderingCore RenderingOpenGL2 RenderingUI RenderingVolume
+    RenderingVolumeOpenGL2)
 ELSE()
 MESSAGE(STATUS "Using custom VTK")
 SET_CUSTOM_VTK_PACKAGE()

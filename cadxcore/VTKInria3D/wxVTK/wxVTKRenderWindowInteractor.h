@@ -64,6 +64,8 @@
 
 #if defined(__WXGTK__)
 #if defined(wxUSE_GLCANVAS)
+// wx/glcanvas.h includes GL/gl.h, which must come after GLEW
+#    include <vtk_glew.h>
 #    include <wx/window.h>
 #    include <wx/glcanvas.h>
 #  else
@@ -185,6 +187,17 @@ private:
 #if defined(__WXGTK__) && defined(wxUSE_GLCANVAS)
         wxGLContext *GLContext;
 #endif
+
+        // The render window is a vtkGenericOpenGLRenderWindow drawing into the
+        // canvas' own GL context; these hook it up to wx.
+        void CreateRenderWindow();
+        bool InitializeGL();
+        bool MakeGLContextCurrent();
+        // Native handle of GLContext, recorded when it is made current, so
+        // VTK can be told whether it still is (wx offers no such query).
+        void* NativeGLContext;
+        static void OnRenderWindowEvent(vtkObject* caller, unsigned long eventId,
+                                        void* clientData, void* callData);
 
         //----------------------------------------------------------------------------------------------------
         //region Interfaz IWidgetsRenderer

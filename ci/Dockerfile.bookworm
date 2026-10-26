@@ -1,9 +1,9 @@
-# Build environment for Phase 1: current distribution libraries, except VTK.
+# Build environment: Debian 12 (bookworm) distribution libraries.
 #
-# Debian 12 (bookworm) ships wxWidgets 3.2, ITK 5, DCMTK 3.6.7 and OpenSSL 3,
-# but only VTK 9. The code still draws with legacy OpenGL calls that need VTK's
-# old "OpenGL" rendering backend, so VTK 6.3 is built from source here until the
-# VTK 9 port (Phase 2) is done.
+# wxWidgets 3.2, ITK 5, DCMTK 3.6.7, OpenSSL 3 and VTK 9.1 all come from Debian.
+# The widget drawing code still uses legacy OpenGL calls; the application asks
+# for a compatibility-profile context so they keep working next to VTK 9 (see
+# docs/modernization-plan.md, Phase 2).
 FROM --platform=linux/amd64 debian:bookworm
 
 RUN apt-get update \
@@ -12,54 +12,21 @@ RUN apt-get update \
       ca-certificates \
       cmake \
       pkg-config \
-      wget \
-      libgl-dev \
-      libglu1-mesa-dev \
-      libx11-dev \
-      libxext-dev \
-      libxt-dev \
- && rm -rf /var/lib/apt/lists/*
-
-# VTK 6.3 with the legacy OpenGL backend. VTK 6.3 predates GCC 12, so pin the
-# C++ standard to what it was written for. Its CMake files also parse the GCC
-# version with a regex that only knows GCC 3 to 5; the sed below widens it.
-# Bundled third-party libraries are
-# used because the system ones are too new for this VTK.
-ARG VTK_VERSION=6.3.0
-RUN wget -q https://www.vtk.org/files/release/6.3/VTK-${VTK_VERSION}.tar.gz -O /tmp/vtk.tar.gz \
- && mkdir /tmp/vtk-src \
- && tar -xzf /tmp/vtk.tar.gz -C /tmp/vtk-src --strip-components=1 \
- && grep -rl '\[345\]' --include=*.cmake --include=CMakeLists.txt /tmp/vtk-src \
-      | xargs sed -i 's/\[345\]\\\\\.\[0-9\]\\\\\.\[0-9\]\*/[0-9]+\\\\.[0-9]+\\\\.[0-9]+/' \
- && cmake -S /tmp/vtk-src -B /tmp/vtk-build \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_INSTALL_PREFIX=/opt/vtk6 \
-      -DCMAKE_CXX_FLAGS="-std=gnu++11 -fpermissive -w" \
-      -DCMAKE_C_FLAGS="-w" \
-      -DBUILD_SHARED_LIBS=ON \
-      -DBUILD_TESTING=OFF \
-      -DBUILD_EXAMPLES=OFF \
-      -DVTK_RENDERING_BACKEND=OpenGL \
- && cmake --build /tmp/vtk-build -- -j"$(nproc)" \
- && cmake --build /tmp/vtk-build --target install \
- && rm -rf /tmp/vtk.tar.gz /tmp/vtk-src /tmp/vtk-build
-
-# Everything else comes from Debian 12. Kept after the VTK layer so changes here
-# don't rebuild VTK.
-RUN apt-get update \
- && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
       libcairo2-dev \
       libcurl4-gnutls-dev \
       libdcmtk-dev \
       libfftw3-dev \
       libfreetype6-dev \
       libgdcm-tools \
+      libgl-dev \
+      libglu1-mesa-dev \
       libgtk-3-dev \
       libinsighttoolkit5-dev \
       libjsoncpp-dev \
       default-libmysqlclient-dev \
       libsqlite3-dev \
       libssl-dev \
+      libvtk9-dev \
       libwrap0-dev \
       libwxgtk3.2-dev \
       libxml2-dev \
@@ -69,11 +36,6 @@ RUN apt-get update \
  && locale-gen \
  && rm -rf /var/lib/apt/lists/*
 
-RUN echo /opt/vtk6/lib > /etc/ld.so.conf.d/vtk6.conf && ldconfig
-
-# Where the source-built VTK keeps its CMake package files; ci/build.sh passes
-# it on to CMake as -DVTK_DIR.
-ENV VTK_DIR=/opt/vtk6/lib/cmake/vtk-6.3
 ENV LANG=en_US.UTF-8
 # No D-Bus session in the container; keep GTK settings in memory instead of
 # printing a dconf warning for every change.

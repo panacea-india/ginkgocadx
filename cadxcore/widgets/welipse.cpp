@@ -28,7 +28,7 @@
 #include <api/ievento.h>
 #include <api/ioverlay.h>
 #include "main/managers/widgetsmanager.h"
-#include <vtkgl.h>
+#include <vtk_glew.h>
 #include <api/westilo.h>
 #include <cmath>
 

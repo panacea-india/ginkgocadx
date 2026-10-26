@@ -11,11 +11,10 @@ the GNU Lesser General Public License v3.
 ## Status
 
 The code builds against Debian 12 (bookworm) libraries: wxWidgets 3.2, ITK 5,
-DCMTK 3.6.7 and OpenSSL 3. Its drawing code still needs VTK's legacy OpenGL
-backend, which current distributions no longer ship, so the build container in
-`ci/` compiles VTK 6.3 from source. See
-[docs/modernization-plan.md](docs/modernization-plan.md) for the plan, including
-the port to VTK 9.
+DCMTK 3.6.7, OpenSSL 3 and VTK 9.1. Its measurement and annotation tools still
+draw with legacy OpenGL, so it needs an OpenGL 3.2+ compatibility profile,
+which Mesa, NVIDIA and AMD drivers on Linux provide. See
+[docs/modernization-plan.md](docs/modernization-plan.md) for the plan.
 
 Changes in this branch on top of Ginkgo CADx 3.8.8:
 
@@ -26,8 +25,7 @@ Changes in this branch on top of Ginkgo CADx 3.8.8:
 
 ## Build
 
-You need Docker on an x86_64 machine. Building the image compiles VTK 6.3, which
-takes a while the first time; Docker caches it afterwards.
+You need Docker on an x86_64 machine.
 
 ```
 docker build -t ginkgocadx-build-bookworm -f ci/Dockerfile.bookworm ci
@@ -61,8 +59,7 @@ On a Linux desktop, mount `/tmp/.X11-unix` and pass your own `DISPLAY`.
 ## Building without Docker
 
 On Debian 12 the build dependencies are listed in `ci/Dockerfile.bookworm`.
-Install them, build VTK 6.3 as the Dockerfile does, then run
-`VTK_DIR=<vtk-prefix>/lib/cmake/vtk-6.3 ci/build.sh` from the repository root.
+Install them and run `ci/build.sh` from the repository root.
 
 ## AppImage
 

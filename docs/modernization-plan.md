@@ -165,10 +165,48 @@ docker run --rm -v "$PWD":/src \
   ginkgocadx-build-bookworm ci/run.sh build-bookworm
 ```
 
-### Phase 2: VTK 9 port
+### Phase 2: VTK 9 port (in progress, branch `phase2-vtk9`)
 
-Rewrite the OpenGL drawing layer described above. Until this is done the app
-depends on an old base image. A good first large project for new contributors.
+Done in two steps so the application keeps working throughout.
+
+**Step 1: run on VTK 9 with the existing drawing code (done).** Debian 12's
+VTK 9.1 package replaces the source-built VTK 6.3.
+
+- [x] `wxVTKRenderWindowInteractor` uses `vtkGenericOpenGLRenderWindow` drawing
+      into the wx canvas' own GL context instead of VTK creating one on the X
+      window
+- [x] That context is a compatibility profile (OpenGL 3.2+), so the legacy
+      `glBegin`/`glEnd` drawing still works next to VTK 9
+- [x] `GNC::GCS::LegacyGLScope` (`cadxcore/vtk/legacyglscope.cpp`) recreates the
+      fixed-function state VTK 6 left behind (camera in the matrix stack, no
+      shader, texture unit 0) and resynchronises VTK's state cache afterwards;
+      `WidgetsActor` and the image actor draw inside it
+- [x] The image plane is drawn by `vtkGinkgoLegacyImageActor`, because
+      `vtkGinkgoOpenGLTexture` binds its own texture and shader, which VTK 9's
+      mappers would bypass
+- [x] `vtkgl::` names replaced by GLEW's; removed `vtkSmartVolumeMapper` copy
+      (unused) and VTK 6-only Carbon/Cocoa code
+- [x] Image display and the ruler, angle and arrow tools work on screen;
+      line and label colours re-checked on the ruler after the texture-unit fix
+
+**Step 2: replace the legacy OpenGL drawing (not started).** Move the 32 files
+of immediate-mode drawing behind a small modern-GL helper, one widget at a
+time, so the compatibility profile is no longer needed (and macOS becomes
+possible).
+
+Findings:
+
+- A plain `wxGLContext` gets the driver's highest compatibility profile on
+  Linux (Mesa: 4.5). Asking wx 3.2.2 for one with `wxGLContextAttrs` fails on
+  some X servers: wx makes a temporary `glXCreateContext` call that returns
+  `BadValue`. `InitializeGL` checks the version and profile it actually got.
+- `vtkGenericOpenGLRenderWindow::Render` silently skips the frame unless the
+  `WindowIsCurrentEvent` observer answers yes.
+- `vtkCamera::GetProjectionTransformMatrix(vtkRenderer*)` returns a matrix that
+  is already transposed for OpenGL; the `(aspect, near, far)` overload doesn't.
+- VTK 9 leaves other texture units active; legacy code drawing text as
+  textured quads then shows black boxes.
+- Each container starts as a first run, so Ginkgo shows its license dialog.
 
 ### Phase 3: open the doors
 

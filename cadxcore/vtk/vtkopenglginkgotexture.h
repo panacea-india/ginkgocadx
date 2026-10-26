@@ -27,7 +27,7 @@
 
 #pragma once
 #include <api/ilock.h>
-#include <vtkOpenGLTexture.h>
+#include <vtkTexture.h>
 //BTX
 #include <vtkWeakPointer.h> // needed for vtkWeakPointer.
 //ETX
@@ -37,11 +37,13 @@ class vtkOpenGLRenderer;
 class vtkRenderWindow;
 class vtkPixelBufferObject;
 
-class vtkGinkgoOpenGLTexture : public vtkOpenGLTexture, public GNC::GCS::ILockable
+// Derives from vtkTexture, not VTK 9's vtkOpenGLTexture: it manages its own GL
+// texture and shader and is drawn with legacy OpenGL by vtkGinkgoImageViewer.
+class vtkGinkgoOpenGLTexture : public vtkTexture, public GNC::GCS::ILockable
 {
 public:
         static vtkGinkgoOpenGLTexture *New();
-        vtkTypeMacro(vtkGinkgoOpenGLTexture,vtkOpenGLTexture);
+        vtkTypeMacro(vtkGinkgoOpenGLTexture,vtkTexture);
         virtual void PrintSelf(ostream& os, vtkIndent indent);
 
         // Description:

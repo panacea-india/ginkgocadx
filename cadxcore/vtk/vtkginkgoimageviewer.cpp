@@ -79,6 +79,8 @@
 #include <vtkStreamingDemandDrivenPipeline.h>
 #include <vtkImageDataStreamer.h>
 #include <vtkOpenGLTexture.h>
+#include <vtk_glew.h>
+#include <vtk/legacyglscope.h>
 #include <vtkMatrix3x3.h>
 #include <vtkMatrix4x4.h>
 #include <vtkPointData.h>
@@ -91,41 +93,73 @@
 #define VTK_GINKGO_ZOOM_MIN 0.25f
 #define VTK_GINKGO_ZOOM_MAX 200
 
-class vtkGinkgoTexture : public vtkOpenGLTexture
+/**
+ * Draws the image plane with legacy OpenGL. vtkGinkgoOpenGLTexture binds its
+ * own texture and windowing shader, which VTK 9's shader-based mappers would
+ * bypass, so this actor draws the mapper's polygons itself.
+ */
+class vtkGinkgoLegacyImageActor : public vtkActor
 {
-protected:
-        vtkGinkgoTexture() : m_IdTextura(-1),  m_vtkRenderWindow(NULL) {}
-
-        ~vtkGinkgoTexture() {}
 public:
+        static vtkGinkgoLegacyImageActor *New();
+        vtkTypeMacro(vtkGinkgoLegacyImageActor, vtkActor);
 
-        static vtkGinkgoTexture *New();
-
-        vtkTypeMacro(vtkGinkgoTexture,vtkOpenGLTexture);
-
-        long GetTextureId() const
+        void Render(vtkRenderer* ren, vtkMapper* mapper) override
         {
-                return Index;
-        }
+                mapper->Update();
+                vtkPolyData* poly = vtkPolyData::SafeDownCast(mapper->GetInputDataObject(0, 0));
+                if (poly == NULL || poly->GetPoints() == NULL) {
+                        return;
+                }
+                vtkDataArray* tcoords = poly->GetPointData()->GetTCoords();
 
-        //indica si la textura tiene id (se ha intentado cargar)
-        bool TextureDefined() const
-        {
-                return Index != 0;
-        }
+                GNC::GCS::LegacyGLScope legacyGL(ren);
 
-        operator long () const
-        {
-                return Index;
+                if (!this->IsIdentity) {
+                        glMatrixMode(GL_MODELVIEW);
+                        glMultTransposeMatrixd(this->GetMatrix()->GetData());
+                }
+
+                glDisable(GL_LIGHTING);
+                glColor4d(1.0, 1.0, 1.0, this->GetProperty()->GetOpacity());
+
+                vtkTexture* texture = this->GetTexture();
+                if (texture != NULL) {
+                        texture->Load(ren);
+                }
+
+                vtkCellArray* polys = poly->GetPolys();
+                vtkIdType npts = 0;
+                const vtkIdType* ids = NULL;
+                double point[3];
+                for (polys->InitTraversal(); polys->GetNextCell(npts, ids); ) {
+                        glBegin(GL_POLYGON);
+                        for (vtkIdType i = 0; i < npts; ++i) {
+                                if (tcoords != NULL) {
+                                        double* tc = tcoords->GetTuple(ids[i]);
+                                        glTexCoord2d(tc[0], tc[1]);
+                                }
+                                poly->GetPoint(ids[i], point);
+                                glVertex3dv(point);
+                        }
+                        glEnd();
+                }
+
+                if (texture != NULL) {
+                        texture->PostRender(ren);
+                }
         }
 
 protected:
-        long m_IdTextura;
+        vtkGinkgoLegacyImageActor() {}
+        ~vtkGinkgoLegacyImageActor() {}
 
-        vtkRenderWindow *m_vtkRenderWindow;
+private:
+        vtkGinkgoLegacyImageActor(const vtkGinkgoLegacyImageActor&) = delete;
+        void operator=(const vtkGinkgoLegacyImageActor&) = delete;
 };
 
-vtkStandardNewMacro(vtkGinkgoTexture);
+vtkStandardNewMacro(vtkGinkgoLegacyImageActor);
 
 #if defined(DEBUG_PIPELINE)
 static vtkIdType pts[6][4]= {{0,1,2,3}, {4,5,6,7}, {0,1,5,4}, {1,2,6,5}, {2,3,7,6}, {3,0,4,7}};
@@ -163,7 +197,7 @@ public:
         vtkSmartPointer<vtkPlane>                       Plane;
         vtkSmartPointer<vtkGinkgoOpenGLTexture>         Textura;
         vtkSmartPointer<vtkPolyDataMapper>              MapperPlano;
-        vtkSmartPointer<vtkGinkgoTexture>               TexturaOverlay;
+        vtkSmartPointer<vtkOpenGLTexture>               TexturaOverlay;
         vtkSmartPointer<vtkPolyDataMapper>              MapperPlanoOverlay;
 
         vtkSmartPointer<vtkImageMapToWindowLevelColors> WindowLevel;
@@ -183,7 +217,7 @@ public:
 Pipeline::Pipeline(): ModelMatrix(GNC::GCS::IGinkgoMatrix4x4::New()),
         ModelMatrixInv(GNC::GCS::IGinkgoMatrix4x4::New())
 {
-        ImageActor      = vtkSmartPointer<vtkActor>::New();
+        ImageActor      = vtkSmartPointer<vtkGinkgoLegacyImageActor>::New();
 
 #if defined(DEBUG_PIPELINE)
 
@@ -220,7 +254,7 @@ Pipeline::Pipeline(): ModelMatrix(GNC::GCS::IGinkgoMatrix4x4::New()),
         PlaneSource->SetYResolution(1);
 
         Textura            = vtkSmartPointer<vtkGinkgoOpenGLTexture>::New();
-        TexturaOverlay     = vtkSmartPointer<vtkGinkgoTexture>::New();
+        TexturaOverlay     = vtkSmartPointer<vtkOpenGLTexture>::New();
         MapperPlano        = vtkSmartPointer<vtkPolyDataMapper>::New();
         MapperPlanoOverlay = vtkSmartPointer<vtkPolyDataMapper>::New();
         Plane              = vtkSmartPointer<vtkPlane>::New();
@@ -247,7 +281,7 @@ Pipeline::Pipeline(): ModelMatrix(GNC::GCS::IGinkgoMatrix4x4::New()),
         Textura->RepeatOff();
         TexturaOverlay->SetInterpolate(1);
         TexturaOverlay->RepeatOff();
-        TexturaOverlay->MapColorScalarsThroughLookupTableOn();
+        TexturaOverlay->SetColorModeToMapScalars();
         vtkLookupTable* tblover = vtkLookupTableManager::GetOverlayLooupTable();
         TexturaOverlay->SetLookupTable(tblover);
         TexturaOverlay->GetLookupTable()->SetRange(0, 1);
@@ -999,7 +1033,7 @@ void vtkGinkgoImageViewer::SetupPipeline(bool forceReload)
         if (!e.PipelineInstalled) {
 
                 if (nc == 1)  {
-                        p.Textura->MapColorScalarsThroughLookupTableOn();
+                        p.Textura->SetColorModeToMapScalars();
                         if (p.ImageData != NULL) {
                                 GNC::GCS::ILocker lock(p.Textura);
                                 p.Textura->SetInputData(p.ImageData);
@@ -1021,7 +1055,7 @@ void vtkGinkgoImageViewer::SetupPipeline(bool forceReload)
                         }
                 }//nc == 1
                 else {
-                        p.Textura->MapColorScalarsThroughLookupTableOff();
+                        p.Textura->SetColorModeToDefault();
                         if (p.ImageData != NULL) {
                                 GNC::GCS::ILocker lock(p.Textura);
                                 p.Textura->SetInputData(p.ImageData);
@@ -1046,7 +1080,7 @@ void vtkGinkgoImageViewer::SetupPipeline(bool forceReload)
         } else {
                 if (nc != e.CurrentNumberOfComponents) {
                         if (nc == 1)  { // NC = 1. Antes era 0, 2, 3 o 4
-                                p.Textura->MapColorScalarsThroughLookupTableOn();
+                                p.Textura->SetColorModeToMapScalars();
                                 //p.StreamConnector->RemoveAllInputs();
                                 if (p.ImageData != NULL) {
                                         GNC::GCS::ILocker lock(p.Textura);
@@ -1067,7 +1101,7 @@ void vtkGinkgoImageViewer::SetupPipeline(bool forceReload)
                                         p.OverlayActor->VisibilityOff();
                                 }
                         } else { // NC = 0, 2, 3 o 4. antes era 1
-                                p.Textura->MapColorScalarsThroughLookupTableOff();
+                                p.Textura->SetColorModeToDefault();
                                 p.WindowLevel->RemoveAllInputs();
                                 p.Textura->SetLookupTable(NULL);
 
@@ -1085,7 +1119,7 @@ void vtkGinkgoImageViewer::SetupPipeline(bool forceReload)
                         e.CurrentNumberOfComponents = nc;
                 } else {
                         if (nc == 1) {
-                                p.Textura->MapColorScalarsThroughLookupTableOn();
+                                p.Textura->SetColorModeToMapScalars();
                                 if (p.OverlayData != NULL) {
                                         p.TexturaOverlay->SetInputData(p.OverlayData);
                                         p.TexturaOverlay->Modified();
@@ -1095,7 +1129,7 @@ void vtkGinkgoImageViewer::SetupPipeline(bool forceReload)
                                         p.OverlayActor->VisibilityOff();
                                 }
                         } else {
-                                p.Textura->MapColorScalarsThroughLookupTableOff();
+                                p.Textura->SetColorModeToDefault();
                                 p.OverlayActor->VisibilityOff();
                         }
                         if (p.ImageData != NULL) {
@@ -1756,10 +1790,10 @@ bool vtkGinkgoImageViewer::SetUpdateExtent(int extent[6])
 
         if (p.InputConnection != NULL) {
                 if (p.InputConnection->GetProducer() &&  p.InputConnection->GetProducer()->GetExecutive()) {
-                        p.InputConnection->GetProducer()->SetUpdateExtent(extent);
                         vtkInformationVector* iv = p.InputConnection->GetProducer()->GetExecutive()->GetOutputInformation();
                         if (iv && iv->GetNumberOfInformationObjects() > 0) {
                                 vtkInformation* io = iv->GetInformationObject(0);
+                                io->Set(vtkStreamingDemandDrivenPipeline::UPDATE_EXTENT(), extent, 6);
                                 io->Set(vtkStreamingDemandDrivenPipeline::WHOLE_EXTENT(), extent, 6);
                                 ok = true;
                         }

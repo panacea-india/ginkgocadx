@@ -32,7 +32,7 @@
 
 
 #include <iterator>
-#include <vtkgl.h>
+#include <vtk_glew.h>
 #include <api/westilo.h>
 #include <cmath>
 

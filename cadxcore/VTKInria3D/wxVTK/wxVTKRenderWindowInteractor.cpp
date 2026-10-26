@@ -16,6 +16,8 @@ PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
 
+// GLEW must come before any other OpenGL header
+#include <vtk_glew.h>
 #include <assert.h>
 
 #include "wxVTKRenderWindowInteractor.h"
@@ -33,14 +35,9 @@ PURPOSE.  See the above copyright notice for more information.
 
 #include "vtkDebugLeaks.h"
 #include "vtkCommand.h"
-
-#ifdef __WXMAC__
-#ifdef __WXCOCOA__
-#include "vtkCocoaRenderWindow.h"
-#else
-#include "vtkCarbonRenderWindow.h"
-#endif
-#endif
+#include "vtkCallbackCommand.h"
+#include "vtkGenericOpenGLRenderWindow.h"
+#include <GL/glx.h>
 
 #include <vtk/vtkginkgoimageviewer.h>
 #include <vtkImageActor.h>
@@ -192,23 +189,41 @@ BEGIN_EVENT_TABLE(wxVTKRenderWindowInteractor, wxGLCanvas)
         EVT_SIZE        (wxVTKRenderWindowInteractor::OnSize)
 END_EVENT_TABLE()
 
-//vtkCxxMacro(wxVTKRenderWindowInteractor, "$Revision: 1276 $")
-vtkInstantiatorNewMacro(wxVTKRenderWindowInteractor)
-
 #if defined(__WXGTK__) && defined(wxUSE_GLCANVAS)
-static int wxvtk_attributes[]= {
-        WX_GL_DOUBLEBUFFER,
-        WX_GL_RGBA,
-        WX_GL_DEPTH_SIZE,
-        16,
-        0
-};
+static wxGLAttributes wxvtkDisplayAttributes()
+{
+        wxGLAttributes attrs;
+        attrs.PlatformDefaults().RGBA().DoubleBuffer().Depth(24).EndList();
+        return attrs;
+}
 #endif
+
+// VTK 9 needs OpenGL 3.2, and the widgets still draw with legacy OpenGL
+// (glBegin/glEnd), so the context must be a 3.2+ compatibility profile.
+// A plain wxGLContext gives the highest compatibility version the driver has
+// (Mesa and NVIDIA on Linux). Asking wx 3.2.2 for one explicitly with
+// wxGLContextAttrs fails on some X servers (glXCreateContext BadValue).
+static bool wxvtkContextIsUsable()
+{
+        GLint major = 0, minor = 0, profile = 0;
+        glGetIntegerv(GL_MAJOR_VERSION, &major);
+        glGetIntegerv(GL_MINOR_VERSION, &minor);
+        if (major > 3 || (major == 3 && minor >= 2)) {
+                glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &profile);
+        }
+        const char* version = (const char*) glGetString(GL_VERSION);
+        if (major < 3 || (major == 3 && minor < 2) || (profile & GL_CONTEXT_CORE_PROFILE_BIT)) {
+                LOG_ERROR("Core/GL", "Need an OpenGL 3.2+ compatibility profile context, got: "
+                          << (version != NULL ? version : "unknown"));
+                return false;
+        }
+        return true;
+}
 
 //---------------------------------------------------------------------------
 wxVTKRenderWindowInteractor::wxVTKRenderWindowInteractor()
 #if defined(__WXGTK__) && defined(wxUSE_GLCANVAS)
-        : wxGLCanvas(0, -1, wxvtk_attributes, wxDefaultPosition, wxDefaultSize, 0, wxT("wxVTKRenderWindowInteractor")),
+        : wxGLCanvas(NULL, wxvtkDisplayAttributes(), -1, wxDefaultPosition, wxDefaultSize, 0, wxT("wxVTKRenderWindowInteractor")),
           vtkRenderWindowInteractor()
 #else
         : wxWindow(), vtkRenderWindowInteractor()
@@ -221,7 +236,7 @@ wxVTKRenderWindowInteractor::wxVTKRenderWindowInteractor()
           , RenderWhenDisabled(1)
           , UseCaptureMouse(1)
 #if defined(__WXGTK__) && defined(wxUSE_GLCANVAS)
-          , GLContext(new wxGLContext (this))
+          , GLContext(new wxGLContext(this))
 #endif
 {
         vtkDebugLeaks::ConstructClass("wxVTKRenderWindowInteractor");
@@ -229,8 +244,7 @@ wxVTKRenderWindowInteractor::wxVTKRenderWindowInteractor()
         this->SetUseCaptureMouse(0);
 #endif
         this->RenderWindow = NULL;
-        this->SetRenderWindow(vtkRenderWindow::New());
-        this->RenderWindow->Delete();
+        CreateRenderWindow();
         this->m_pPicker = vtkWorldPointPicker::New();
         this->m_c = new TContexto();
         this->m_c->Reset();
@@ -244,7 +258,7 @@ wxVTKRenderWindowInteractor::wxVTKRenderWindowInteractor(wxWindow *parent, wxWin
                 const wxSize &size,
                 long style, const wxString &name)
 #if defined(__WXGTK__) && defined(wxUSE_GLCANVAS)
-        : wxGLCanvas(parent, id, wxvtk_attributes, pos, size, style, name),
+        : wxGLCanvas(parent, wxvtkDisplayAttributes(), id, pos, size, style, name),
           vtkRenderWindowInteractor(),
 #else
         :
@@ -258,7 +272,7 @@ wxVTKRenderWindowInteractor::wxVTKRenderWindowInteractor(wxWindow *parent, wxWin
           RenderWhenDisabled(1),
           UseCaptureMouse(0)
 #if defined(__WXGTK__) && defined(wxUSE_GLCANVAS)
-          , GLContext(new wxGLContext (this))
+          , GLContext(new wxGLContext(this))
 #endif
 {
         vtkDebugLeaks::ConstructClass("wxVTKRenderWindowInteractor");
@@ -266,8 +280,7 @@ wxVTKRenderWindowInteractor::wxVTKRenderWindowInteractor(wxWindow *parent, wxWin
         this->SetUseCaptureMouse(1);
 #endif
         this->RenderWindow = NULL;
-        this->SetRenderWindow(vtkRenderWindow::New());
-        this->RenderWindow->Delete();
+        CreateRenderWindow();
         this->m_c = new TContexto();
         this->m_c->Reset();
 #ifdef __WXMAC__
@@ -489,41 +502,7 @@ void wxVTKRenderWindowInteractor::OnPaint(wxPaintEvent& WXUNUSED(event))
 {
         //must always be here
         wxPaintDC pDC(this);
-        //do it here rather than in the cstor: this is safer.
-        if(!Handle) {
-                Handle = GetHandleHack();
-                RenderWindow->SetWindowId(reinterpret_cast<void *>(Handle));
-                // Cocoa
-                // this->GetNSView() <-> DisplayId
-                // this->GetTopLevel()->GetNSWindow() <-> WindowId
-#ifdef __WXMSW__
-                RenderWindow->SetParentId(reinterpret_cast<void *>(this->GetParent()->GetHWND()));
-#endif //__WXMSW__
-
-                // This is another hack to prevent the VTK Render Window from closing the display.
-                // If VTK closes the display, ~wxContext chashes while trying to destroy its
-                // glContext (because the display is closed). The Get -> Set makes this VTK
-                // object think someone else is responsible for the display.
-                this->RenderWindow->SetDisplayId(this->RenderWindow->GetGenericDisplayId());
-        }
-        // get vtk to render to the wxWindows
-        WSetCurrent();
         Render();
-#ifdef __WXMAC__
-        // This solves a problem with repainting after a window resize
-        // See also: http://sourceforge.net/mailarchive/forum.php?thread_id=31690967&forum_id=41789
-#ifdef __WXCOCOA__
-        vtkCocoaRenderWindow * rwin = vtkCocoaRenderWindow::SafeDownCast(RenderWindow);
-        if( rwin ) {
-                rwin->UpdateContext();
-        }
-#else
-        vtkCarbonRenderWindow* rwin = vtkCarbonRenderWindow::SafeDownCast(RenderWindow);
-        if( rwin ) {
-                rwin->UpdateGLRegion();
-        }
-#endif
-#endif
 }
 //---------------------------------------------------------------------------
 void wxVTKRenderWindowInteractor::OnEraseBackground(wxEraseEvent &event)
@@ -548,36 +527,7 @@ void wxVTKRenderWindowInteractor::OnSize(wxSizeEvent& /*event*/)
 
         int w, h;
         GetClientSize(&w, &h);
-
-#if defined(__WXGTK__)
-        GtkWidget *widget = GetHandle();
-        if (widget != NULL) {
-                GtkWidget* parent_widget = GetParent()->GetHandle();
-                if (parent_widget != NULL) {
-                        gtk_widget_realize(parent_widget);
-                        GdkWindow *window = gtk_widget_get_window(parent_widget);
-                        Window parent_wid = GDK_WINDOW_XID(window);
-                        RenderWindow->SetParentId(reinterpret_cast<void *>(parent_wid));
-                } else {
-                        RenderWindow->SetParentId(NULL);
-                }
-                gtk_widget_realize(widget);
-                Window wid = GDK_WINDOW_XID( gtk_widget_get_window(widget) );
-                RenderWindow->SetWindowId(reinterpret_cast<void *>(wid));
-
-                SetCurrent(*GLContext);
-                UpdateSize(w, h);
-                return;
-        } else {
-                return;
-        }
-#else
         UpdateSize(w, h);
-        if (!Enabled) {
-                return;
-        }
-        InvokeEvent(vtkCommand::ConfigureEvent, NULL);
-#endif
 }
 //---------------------------------------------------------------------------
 void wxVTKRenderWindowInteractor::OnMotion(wxMouseEvent &event)
@@ -864,32 +814,20 @@ void wxVTKRenderWindowInteractor::Render()
         }
 
         if (renderAllowed) {
-                if(Handle && (Handle == GetHandleHack()) ) {
-                        CalcularRelacionPixelsPantalla(FindPokedRenderer(0,0));
-                        RenderWindow->Render();
-                        //t.stop();
-                        //std::cout << "wxVTKRenderWindowInteractor::Render(1) " << t << std::endl;
-                } else if(GetHandleHack()) {
-                        //this means the user has reparented us; let's adapt to the
-                        //new situation by doing the WindowRemap dance
-                        //store the new situation
+                bool firstRender = false;
+                vtkGenericOpenGLRenderWindow* renWin = vtkGenericOpenGLRenderWindow::SafeDownCast(RenderWindow);
+                if (renWin != NULL && !renWin->GetReadyForRendering()) {
+                        if (!InitializeGL()) {
+                                return;
+                        }
+                        firstRender = true;
+                }
 
-                        Handle = GetHandleHack();
+                CalcularRelacionPixelsPantalla(FindPokedRenderer(0,0));
+                RenderWindow->Render();
 
-#if defined(__WXOSX__)
-                        RenderWindow->SetParentId(reinterpret_cast<void *>(this->GetParent()->GetHandle()));
-                        RenderWindow->SetWindowId(reinterpret_cast<void *>(Handle));
-#elif defined(__WXMSW__)
-                        RenderWindow->SetParentId(reinterpret_cast<void *>(this->GetParent()->GetHWND()));
-                        RenderWindow->SetWindowId(reinterpret_cast<void *>(Handle));
-#endif
-
-                        CalcularRelacionPixelsPantalla(FindPokedRenderer(0,0));
-                        bool doPlot = !Initialized;
-
-                        RenderWindow->Render();
-
-                        if (doPlot) {
+                {
+                        if (firstRender) {
                                 GNC::GCS::IControladorLog* cLog = GNC::GCS::IControladorLog::Instance();
                                 if (cLog != NULL && cLog->IsEnabledFor(GNC::GCS::IControladorLog::DebugLog) ) {
                                         const char* str;
@@ -1149,6 +1087,81 @@ void wxVTKRenderWindowInteractor::PostRender(bool inmediato)
                 this->Refresh(false);
         }
 
+}
+
+void wxVTKRenderWindowInteractor::CreateRenderWindow()
+{
+        vtkGenericOpenGLRenderWindow* renWin = vtkGenericOpenGLRenderWindow::New();
+        // Nothing can be drawn until the canvas is shown and its context exists
+        renWin->SetReadyForRendering(false);
+
+        vtkCallbackCommand* callback = vtkCallbackCommand::New();
+        callback->SetClientData(this);
+        callback->SetCallback(&wxVTKRenderWindowInteractor::OnRenderWindowEvent);
+        renWin->AddObserver(vtkCommand::WindowMakeCurrentEvent, callback);
+        renWin->AddObserver(vtkCommand::WindowIsCurrentEvent, callback);
+        renWin->AddObserver(vtkCommand::WindowFrameEvent, callback);
+        NativeGLContext = NULL;
+        callback->Delete();
+
+        this->RenderWindow = NULL;
+        this->SetRenderWindow(renWin);
+        renWin->Delete();
+}
+
+bool wxVTKRenderWindowInteractor::InitializeGL()
+{
+        vtkGenericOpenGLRenderWindow* renWin = vtkGenericOpenGLRenderWindow::SafeDownCast(RenderWindow);
+        if (renWin == NULL || !IsShownOnScreen()) {
+                return false;
+        }
+        if (GLContext == NULL || !GLContext->IsOK()) {
+                LOG_ERROR("Core/GL", "Unable to create an OpenGL context");
+                return false;
+        }
+        if (!MakeGLContextCurrent() || !wxvtkContextIsUsable()) {
+                return false;
+        }
+
+        int w, h;
+        GetClientSize(&w, &h);
+        renWin->SetSize(w, h);
+        renWin->SetMapped(1);
+        renWin->SetIsDirect(1);
+        renWin->SetSupportsOpenGL(1);
+        if (!renWin->InitializeFromCurrentContext()) {
+                LOG_ERROR("Core/GL", "VTK could not initialize from the OpenGL context");
+                return false;
+        }
+        renWin->SetReadyForRendering(true);
+        return true;
+}
+
+bool wxVTKRenderWindowInteractor::MakeGLContextCurrent()
+{
+        if (GLContext == NULL || !IsShownOnScreen() || !SetCurrent(*GLContext)) {
+                return false;
+        }
+        NativeGLContext = glXGetCurrentContext();
+        return true;
+}
+
+void wxVTKRenderWindowInteractor::OnRenderWindowEvent(vtkObject* /*caller*/, unsigned long eventId,
+                void* clientData, void* callData)
+{
+        wxVTKRenderWindowInteractor* self = static_cast<wxVTKRenderWindowInteractor*>(clientData);
+        if (eventId == vtkCommand::WindowMakeCurrentEvent) {
+                self->MakeGLContextCurrent();
+        } else if (eventId == vtkCommand::WindowIsCurrentEvent) {
+                // vtkGenericOpenGLRenderWindow skips rendering unless this is true
+                bool* isCurrent = static_cast<bool*>(callData);
+                *isCurrent = self->NativeGLContext != NULL &&
+                             glXGetCurrentContext() == self->NativeGLContext;
+        } else if (eventId == vtkCommand::WindowFrameEvent) {
+                if (self->IsShownOnScreen()) {
+                        self->SwapBuffers();
+                }
+        }
 }
 
 void wxVTKRenderWindowInteractor::WSetCurrent()

@@ -61,7 +61,7 @@
 #include <vtkAlgorithmOutput.h>
 #include <vtkImageData.h>
 #include <vtkMatrix4x4.h>
-#include <vtkgl.h>
+#include <vtk_glew.h>
 
 #include <api/autoptr.h>
 #endif
