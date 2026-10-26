@@ -80,7 +80,11 @@
 #include <vtkImageDataStreamer.h>
 #include <vtkOpenGLTexture.h>
 #include <vtk_glew.h>
-#include <vtk/legacyglscope.h>
+#include <vtkCamera.h>
+#include <vtkNew.h>
+#include <vtkOpenGLRenderWindow.h>
+#include <vtkOpenGLState.h>
+#include <vtkTextureUnitManager.h>
 #include <vtkMatrix3x3.h>
 #include <vtkMatrix4x4.h>
 #include <vtkPointData.h>
@@ -94,72 +98,63 @@
 #define VTK_GINKGO_ZOOM_MAX 200
 
 /**
- * Draws the image plane with legacy OpenGL. vtkGinkgoOpenGLTexture binds its
- * own texture and windowing shader, which VTK 9's shader-based mappers would
- * bypass, so this actor draws the mapper's polygons itself.
+ * Draws the image plane with vtkGinkgoOpenGLTexture's own shader, which
+ * applies the lookup table or brightness/contrast. VTK 9's mappers would draw
+ * the plane with their own shaders instead, so this actor draws it itself.
  */
-class vtkGinkgoLegacyImageActor : public vtkActor
+class vtkGinkgoImageActor : public vtkActor
 {
 public:
-        static vtkGinkgoLegacyImageActor *New();
-        vtkTypeMacro(vtkGinkgoLegacyImageActor, vtkActor);
+        static vtkGinkgoImageActor *New();
+        vtkTypeMacro(vtkGinkgoImageActor, vtkActor);
 
         void Render(vtkRenderer* ren, vtkMapper* mapper) override
         {
                 mapper->Update();
                 vtkPolyData* poly = vtkPolyData::SafeDownCast(mapper->GetInputDataObject(0, 0));
-                if (poly == NULL || poly->GetPoints() == NULL) {
+                vtkGinkgoOpenGLTexture* texture = vtkGinkgoOpenGLTexture::SafeDownCast(this->GetTexture());
+                vtkOpenGLRenderWindow* renWin = vtkOpenGLRenderWindow::SafeDownCast(ren->GetRenderWindow());
+                if (poly == NULL || poly->GetPoints() == NULL || texture == NULL || renWin == NULL) {
                         return;
                 }
-                vtkDataArray* tcoords = poly->GetPointData()->GetTCoords();
 
-                GNC::GCS::LegacyGLScope legacyGL(ren);
+                // Load() binds the texture to upload it; give it a unit VTK isn't using
+                vtkTextureUnitManager* units = renWin->GetTextureUnitManager();
+                const int unit = units->Allocate();
+                renWin->GetState()->vtkglActiveTexture(GL_TEXTURE0 + unit);
+                texture->Load(ren);
+                units->Free(unit);
 
+                // projection * view * model, with the aspect computed as vtkOpenGLCamera does
+                int width = 0, height = 0, lowerLeft[2];
+                ren->GetTiledSizeAndOrigin(&width, &height, lowerLeft, lowerLeft + 1);
+                const double aspect = (height > 0) ? static_cast<double>(width) / height : 1.0;
+                vtkCamera* cam = ren->GetActiveCamera();
+                vtkNew<vtkMatrix4x4> mvp;
+                vtkMatrix4x4::Multiply4x4(cam->GetProjectionTransformMatrix(aspect, -1, 1), cam->GetViewTransformMatrix(), mvp);
                 if (!this->IsIdentity) {
-                        glMatrixMode(GL_MODELVIEW);
-                        glMultTransposeMatrixd(this->GetMatrix()->GetData());
+                        vtkMatrix4x4::Multiply4x4(mvp, this->GetMatrix(), mvp);
                 }
-
-                glDisable(GL_LIGHTING);
-                glColor4d(1.0, 1.0, 1.0, this->GetProperty()->GetOpacity());
-
-                vtkTexture* texture = this->GetTexture();
-                if (texture != NULL) {
-                        texture->Load(ren);
-                }
-
-                vtkCellArray* polys = poly->GetPolys();
-                vtkIdType npts = 0;
-                const vtkIdType* ids = NULL;
-                double point[3];
-                for (polys->InitTraversal(); polys->GetNextCell(npts, ids); ) {
-                        glBegin(GL_POLYGON);
-                        for (vtkIdType i = 0; i < npts; ++i) {
-                                if (tcoords != NULL) {
-                                        double* tc = tcoords->GetTuple(ids[i]);
-                                        glTexCoord2d(tc[0], tc[1]);
-                                }
-                                poly->GetPoint(ids[i], point);
-                                glVertex3dv(point);
+                // vtkMatrix4x4 is row-major, OpenGL wants column-major
+                float columnMajor[16];
+                for (int row = 0; row < 4; ++row) {
+                        for (int col = 0; col < 4; ++col) {
+                                columnMajor[col * 4 + row] = static_cast<float>(mvp->GetElement(row, col));
                         }
-                        glEnd();
                 }
-
-                if (texture != NULL) {
-                        texture->PostRender(ren);
-                }
+                texture->Draw(ren, poly, columnMajor, this->GetProperty()->GetOpacity());
         }
 
 protected:
-        vtkGinkgoLegacyImageActor() {}
-        ~vtkGinkgoLegacyImageActor() {}
+        vtkGinkgoImageActor() {}
+        ~vtkGinkgoImageActor() {}
 
 private:
-        vtkGinkgoLegacyImageActor(const vtkGinkgoLegacyImageActor&) = delete;
-        void operator=(const vtkGinkgoLegacyImageActor&) = delete;
+        vtkGinkgoImageActor(const vtkGinkgoImageActor&) = delete;
+        void operator=(const vtkGinkgoImageActor&) = delete;
 };
 
-vtkStandardNewMacro(vtkGinkgoLegacyImageActor);
+vtkStandardNewMacro(vtkGinkgoImageActor);
 
 #if defined(DEBUG_PIPELINE)
 static vtkIdType pts[6][4]= {{0,1,2,3}, {4,5,6,7}, {0,1,5,4}, {1,2,6,5}, {2,3,7,6}, {3,0,4,7}};
@@ -217,7 +212,7 @@ public:
 Pipeline::Pipeline(): ModelMatrix(GNC::GCS::IGinkgoMatrix4x4::New()),
         ModelMatrixInv(GNC::GCS::IGinkgoMatrix4x4::New())
 {
-        ImageActor      = vtkSmartPointer<vtkGinkgoLegacyImageActor>::New();
+        ImageActor      = vtkSmartPointer<vtkGinkgoImageActor>::New();
 
 #if defined(DEBUG_PIPELINE)
 

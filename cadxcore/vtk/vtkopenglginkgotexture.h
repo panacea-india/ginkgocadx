@@ -36,6 +36,9 @@ class vtkWindow;
 class vtkOpenGLRenderer;
 class vtkRenderWindow;
 class vtkPixelBufferObject;
+class vtkPolyData;
+class vtkOpenGLVertexArrayObject;
+class vtkOpenGLBufferObject;
 
 // Derives from vtkTexture, not VTK 9's vtkOpenGLTexture: it manages its own GL
 // texture and shader and is drawn with legacy OpenGL by vtkGinkgoImageViewer.
@@ -53,6 +56,13 @@ public:
         // Descsription:
         // Clean up after the rendering is complete.
         virtual void PostRender(vtkRenderer *ren);
+
+        // Description:
+        // Draws the polygons of poly (with texture coordinates) textured with this
+        // image, applying the lookup table or brightness/contrast in a shader.
+        // mvp is the column-major model-view-projection matrix. Load() must have
+        // been called first in this render.
+        void Draw(vtkRenderer* ren, vtkPolyData* poly, const float mvp[16], double opacity);
 
         // Description:
         // Release any graphics resources that are being consumed by this texture.
@@ -131,9 +141,8 @@ protected:
         bool SupportsFragmentShaders;
         bool SupportsMultiTexture;
         vtkPixelBufferObject *PBO;
-        long VertexProgram;
-        long FragmentProgram;
-        long ProgramObject;
+        vtkOpenGLVertexArrayObject *VAO;
+        vtkOpenGLBufferObject *VBO;
         unsigned int LUTIndex;
         bool UseShader;
         int zsize;

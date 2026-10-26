@@ -54,6 +54,17 @@ PURPOSE.  See the above copyright notice for more information.
 #include <vtkOpenGLRenderWindow.h>
 #include <vtkTransform.h>
 #include <vtkPixelBufferObject.h>
+#include <vtkCellArray.h>
+#include <vtkPolyData.h>
+#include <vtkOpenGLBufferObject.h>
+#include <vtkOpenGLShaderCache.h>
+#include <vtkOpenGLState.h>
+#include <vtkOpenGLVertexArrayObject.h>
+#include <vtkShaderProgram.h>
+#include <vtkTextureUnitManager.h>
+
+#include <algorithm>
+#include <vector>
 
 #include <main/controllers/controladorlog.h>
 #include <main/controllers/controladorpermisos.h>
@@ -114,9 +125,8 @@ vtkGinkgoOpenGLTexture::vtkGinkgoOpenGLTexture()
         this->SupportsFragmentShaders=false;
         this->SupportsMultiTexture=false;
         this->PBO=0;
-        this->VertexProgram=0;
-        this->FragmentProgram=0;
-        this->ProgramObject=0;
+        this->VAO=NULL;
+        this->VBO=NULL;
         this->LUTIndex=0;
         this->UseShader=false;
         this->InternalEnableShaders = true;
@@ -200,24 +210,29 @@ void vtkGinkgoOpenGLTexture::SetLookupTable(vtkScalarsToColors* table)
 // Release the graphics resources used by this texture.
 void vtkGinkgoOpenGLTexture::ReleaseGraphicsResources(vtkWindow *renWin)
 {
-        if (this->Index && renWin && renWin->GetMapped()) {
+        const bool contextAvailable = renWin && renWin->GetMapped();
+        if (contextAvailable && (this->Index || this->LUTIndex || this->VAO)) {
                 static_cast<vtkRenderWindow *>(renWin)->MakeCurrent();
-#ifdef GL_VERSION_1_1
-                // free any textures
-                if (glIsTexture(static_cast<GLuint>(this->Index))) {
-                        GLuint tempIndex;
-                        tempIndex = this->Index;
-                        // NOTE: Sun's OpenGL seems to require disabling of texture before delete
-                        //glDisable(GL_TEXTURE_2D);
+                if (this->Index && glIsTexture(static_cast<GLuint>(this->Index))) {
+                        GLuint tempIndex = this->Index;
                         glDeleteTextures(1, &tempIndex);
                 }
-#else
-                if (glIsList(this->Index)) {
-                        glDeleteLists(this->Index,1);
+                if (this->LUTIndex && glIsTexture(this->LUTIndex)) {
+                        glDeleteTextures(1, &this->LUTIndex);
                 }
-#endif
+                if (this->VAO) {
+                        this->VAO->ReleaseGraphicsResources();
+                        this->VBO->ReleaseGraphicsResources();
+                }
+        }
+        if (this->VAO) {
+                this->VAO->Delete();
+                this->VAO = NULL;
+                this->VBO->Delete();
+                this->VBO = NULL;
         }
         this->Index = 0;
+        this->LUTIndex = 0;
         this->RenderWindow = NULL;
         this->CheckedHardwareSupport=false;
         this->SupportsNonPowerOfTwoTextures=false;
@@ -230,49 +245,49 @@ void vtkGinkgoOpenGLTexture::ReleaseGraphicsResources(vtkWindow *renWin)
 }
 
 
-#if defined(ADAPTATIVE_BRIGHNESS_CONTRAST) // "The OpenGL Shading Language" C.19.
+// Image shaders. They follow VTK's conventions so vtkOpenGLShaderCache adds
+// the GLSL version line and fragment output for the context in use.
+static const char* ImageVertexShader =
+        "//VTK::System::Dec\n"
+        "in vec3 aPos;\n"
+        "in vec2 aTex;\n"
+        "uniform mat4 uMVP;\n"
+        "out vec2 vTex;\n"
+        "void main()\n"
+        "{\n"
+        "  gl_Position = uMVP * vec4(aPos, 1.0);\n"
+        "  vTex = aTex;\n"
+        "}\n";
 
-const char *FragmenProgramCode_rgb[] =   {
-        "uniform sampler2D imagetexture;",
-        "uniform float brightness;",
-        "uniform float contrast;",
-        "vec4 averageLuminance = vec4(0.5, 0.5, 0.5, 1.0);",
-        "void main(void)",
-        "{",
-        "vec4 color = texture2D(imagetexture, gl_TexCoord[0].xy);",
-        "gl_FragColor = mix(color * brightness, mix(averageLuminance, color, contrast), 0.5);",
-        "}"
-};
-#else
-const char *FragmenProgramCode_rgb[] =   {
-        "uniform sampler2D imagetexture;",
-        "uniform float brightness;",
-        "uniform float contrast;",
-        "void main(void)",
-        "{",
-        "vec4 color = texture2D(imagetexture, gl_TexCoord[0].xy);",
-        "float pa = color.a;",
-        "color = ((color - 0.5) * max(contrast, 0.0)) + 0.5 + brightness;",
-        "color.a = pa;",
-        "gl_FragColor = color;",
-        "}"
-};
-#endif
-const char *FragmenProgramCode_gray[] = {
-        "uniform sampler2D imagetexture;",
-        "uniform sampler1D lookuptable;",
-        "uniform float lutShift;",
-        "uniform float lutScale;",
-        "void main(void)",
-        "{",
-        "vec4 color = texture2D(imagetexture, gl_TexCoord[0].xy);",
-        "float lutColor = (color.r + lutShift) * lutScale;",
-        "lutColor = clamp(lutColor, 0.0f, 1.0f);",
-        "vec4 cr = texture1D(lookuptable, lutColor);",
-        //"cr.a = 1.0;",
-        "gl_FragColor = cr;",
-        "}"
-};
+// uMode 0: texture as is; 1: grey value through the lookup table;
+// 2: RGB with brightness and contrast ("The OpenGL Shading Language" C.19)
+static const char* ImageFragmentShader =
+        "//VTK::System::Dec\n"
+        "//VTK::Output::Dec\n"
+        "in vec2 vTex;\n"
+        "uniform sampler2D uImage;\n"
+        "uniform sampler1D uLookupTable;\n"
+        "uniform int uMode;\n"
+        "uniform float uLutShift;\n"
+        "uniform float uLutScale;\n"
+        "uniform float uBrightness;\n"
+        "uniform float uContrast;\n"
+        "uniform float uOpacity;\n"
+        "void main()\n"
+        "{\n"
+        "  vec4 color = texture(uImage, vTex);\n"
+        "  if (uMode == 1) {\n"
+        "    float lutColor = clamp((color.r + uLutShift) * uLutScale, 0.0, 1.0);\n"
+        "    color = texture(uLookupTable, lutColor);\n"
+        "  } else if (uMode == 2) {\n"
+        "    vec4 averageLuminance = vec4(0.5, 0.5, 0.5, 1.0);\n"
+        "    color = mix(color * uBrightness, mix(averageLuminance, color, uContrast), 0.5);\n"
+        "  }\n"
+        "  color *= uOpacity;\n"
+        "  // fully transparent texels must not write depth\n"
+        "  if (!(color.a > 0.0)) discard;\n"
+        "  gl_FragData[0] = color;\n"
+        "}\n";
 
 
 // ----------------------------------------------------------------------------
@@ -285,8 +300,8 @@ void vtkGinkgoOpenGLTexture::Load(vtkRenderer *ren)
         {
                 input = this->GetInput();
 
-                GLenum TexFormat         = GL_LUMINANCE;
-                GLenum TexInternalFormat = GL_LUMINANCE;
+                GLenum TexFormat         = GL_RED;
+                GLenum TexInternalFormat = GL_R8;
                 GLenum TexType           = GL_UNSIGNED_BYTE;
 
 
@@ -300,46 +315,6 @@ void vtkGinkgoOpenGLTexture::Load(vtkRenderer *ren)
                 // like the graphics context.
                 vtkOpenGLRenderWindow* renWin = static_cast<vtkOpenGLRenderWindow*>(ren->GetRenderWindow());
 
-                if(this->BlendingMode != VTK_TEXTURE_BLENDING_MODE_NONE && glActiveTexture) {
-                        glTexEnvf (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-
-                        switch(this->BlendingMode) {
-                        case VTK_TEXTURE_BLENDING_MODE_REPLACE: {
-                                glTexEnvf (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
-                                glTexEnvf (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
-                                break;
-                        }
-                        case VTK_TEXTURE_BLENDING_MODE_MODULATE: {
-                                glTexEnvf (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
-                                glTexEnvf (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
-                                break;
-                        }
-                        case VTK_TEXTURE_BLENDING_MODE_ADD: {
-                                glTexEnvf (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_ADD);
-                                glTexEnvf (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_ADD);
-                                break;
-                        }
-                        case VTK_TEXTURE_BLENDING_MODE_ADD_SIGNED: {
-                                glTexEnvf (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_ADD_SIGNED);
-                                glTexEnvf (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_ADD_SIGNED);
-                                break;
-                        }
-                        case VTK_TEXTURE_BLENDING_MODE_INTERPOLATE: {
-                                glTexEnvf (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_INTERPOLATE);
-                                glTexEnvf (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_INTERPOLATE);
-                                break;
-                        }
-                        case VTK_TEXTURE_BLENDING_MODE_SUBTRACT: {
-                                glTexEnvf (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_SUBTRACT);
-                                glTexEnvf (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_SUBTRACT);
-                                break;
-                        }
-                        default: {
-                                glTexEnvf (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_ADD);
-                                glTexEnvf (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_ADD);
-                        }
-                        }
-                }
 
                 bool ImageDataChanged =
                         ( this->GetMTime() > this->LoadTime.GetMTime() )
@@ -444,7 +419,7 @@ void vtkGinkgoOpenGLTexture::Load(vtkRenderer *ren)
                                                 if (scalars->GetDataType() == VTK_UNSIGNED_SHORT || scalars->GetDataType() == VTK_SHORT) {
                                                         //RESCALE TO UNSIGNED SHORT
                                                         bytesPerPixel         = 2;
-                                                        TexInternalFormat = GL_LUMINANCE16;
+                                                        TexInternalFormat = GL_R16;
                                                         TexType           = GL_UNSIGNED_SHORT;
 
                                                         unsigned short* resamplePixelData = new unsigned short[wdh];
@@ -502,7 +477,7 @@ void vtkGinkgoOpenGLTexture::Load(vtkRenderer *ren)
                                                 } else if (scalars->GetDataType() == VTK_UNSIGNED_CHAR || scalars->GetDataType() == VTK_CHAR) {
                                                         //rescale to unsigned byte
                                                         bytesPerPixel         = 1;
-                                                        TexInternalFormat = GL_LUMINANCE8;
+                                                        TexInternalFormat = GL_R8;
                                                         TexType = GL_UNSIGNED_BYTE;
 
                                                         unsigned char* resamplePixelData = new unsigned char[wdh];
@@ -806,14 +781,16 @@ void vtkGinkgoOpenGLTexture::Load(vtkRenderer *ren)
 
                         //if no use pixel shader...
                         if (!this->UseShader || RGBImage) {
-                                TexInternalFormat = bytesPerPixel;
+                                // sized formats: core profiles reject a bare component count
+                                static const GLenum sizedFormats[4] = { GL_R8, GL_RG8, GL_RGB8, GL_RGBA8 };
+                                TexInternalFormat = sizedFormats[std::max(1, std::min(4, static_cast<int>(bytesPerPixel))) - 1];
                                 TexType = GL_UNSIGNED_BYTE;
                                 switch (bytesPerPixel) {
                                 case 1:
-                                        TexFormat = GL_LUMINANCE;
+                                        TexFormat = GL_RED;
                                         break;
                                 case 2:
-                                        TexFormat = GL_LUMINANCE_ALPHA;
+                                        TexFormat = GL_RG;
                                         break;
                                 case 3:
                                         TexFormat = GL_RGB;
@@ -827,10 +804,10 @@ void vtkGinkgoOpenGLTexture::Load(vtkRenderer *ren)
                                 if (this->Quality == VTK_TEXTURE_QUALITY_32BIT) {
                                         switch (bytesPerPixel) {
                                         case 1:
-                                                TexInternalFormat = GL_LUMINANCE8;
+                                                TexInternalFormat = GL_R8;
                                                 break;
                                         case 2:
-                                                TexInternalFormat = GL_LUMINANCE8_ALPHA8;
+                                                TexInternalFormat = GL_RG8;
                                                 break;
                                         case 3:
                                                 TexInternalFormat = GL_RGB8;
@@ -842,10 +819,10 @@ void vtkGinkgoOpenGLTexture::Load(vtkRenderer *ren)
                                 } else if (this->Quality == VTK_TEXTURE_QUALITY_16BIT) {
                                         switch (bytesPerPixel) {
                                         case 1:
-                                                TexInternalFormat = GL_LUMINANCE4;
+                                                TexInternalFormat = GL_R8;
                                                 break;
                                         case 2:
-                                                TexInternalFormat = GL_LUMINANCE4_ALPHA4;
+                                                TexInternalFormat = GL_RG8;
                                                 break;
                                         case 3:
                                                 TexInternalFormat = GL_RGB4;
@@ -914,15 +891,9 @@ void vtkGinkgoOpenGLTexture::Load(vtkRenderer *ren)
                         // define a display list for this texture
                         // get a unique display list id
 
-#ifdef GL_VERSION_1_1
                         glGenTextures(1, &tempIndex);
                         this->Index = static_cast<long>(tempIndex);
                         glBindTexture(GL_TEXTURE_2D, this->Index);
-#else
-                        this->Index = glGenLists(1);
-                        glDeleteLists (static_cast<GLuint>(this->Index), static_cast<GLsizei>(0));
-                        glNewList (static_cast<GLuint>(this->Index), GL_COMPILE);
-#endif
                         //pixel interpolate
                         if (this->GetInterpolate()) {
                                 glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
@@ -944,90 +915,11 @@ void vtkGinkgoOpenGLTexture::Load(vtkRenderer *ren)
                                         glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
                                                          GL_CLAMP_TO_EDGE );
                                 } else {
-                                        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_CLAMP );
-                                        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_CLAMP );
+                                        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_CLAMP_TO_EDGE );
+                                        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_CLAMP_TO_EDGE );
                                 }
                         }
 
-                        // =======================================UPLOAD SHADER ========
-                        if( this->UseShader) {
-                           GLint params = 0;
-
-                                //code of the shader
-                                if (this->ProgramObject == 0) {
-                                        glEnable(GL_FRAGMENT_PROGRAM_ARB);
-                                        //upload vertex program code...
-                                        this->ProgramObject = glCreateProgram();
-                                        this->VertexProgram = glCreateShader(GL_VERTEX_SHADER);
-
-                                        std::string VertexProgramCode =
-                                                "void main (void)\n"
-                                                "{\n"
-                                                "gl_TexCoord[0] = gl_MultiTexCoord0;\n"
-                                                "gl_Position = ftransform();\n"
-                                                "}\n";
-                                        const char* ptr1 = (const char*)VertexProgramCode.c_str();
-                                        glShaderSource(this->VertexProgram, 1, &ptr1, NULL);
-                                        glCompileShader(this->VertexProgram);
-                                        glGetShaderiv(this->VertexProgram, GL_COMPILE_STATUS, &params);
-
-                                        if(params==GL_TRUE) {
-                                                //std::cout <<"vertex shader source compiled successfully" << std::endl;
-                                        } else {
-                                                LOG_ERROR("Visualization", "vertex shader source compile error");
-                                                // include null terminator
-                                                glGetShaderiv(this->VertexProgram, GL_INFO_LOG_LENGTH, &params);
-                                                if(params>0) {
-                                                        char *buffer=new char[params];
-                                                        glGetShaderInfoLog(this->VertexProgram, params, 0, buffer);
-                                                        LOG_ERROR("Visualization", buffer);
-                                                        delete[] buffer;
-                                                } else {
-                                                        LOG_ERROR("Visualization", "No error information available");
-                                                }
-                                        }
-
-                                        this->FragmentProgram = glCreateShader(GL_FRAGMENT_SHADER);
-
-
-                                        if (this->RGBImage) { // RGB Frament shader program.
-                                                glShaderSource(this->FragmentProgram, sizeof(FragmenProgramCode_rgb) / sizeof (char*), FragmenProgramCode_rgb, 0);
-                                        } else { // GrayLevel Frament shader program
-                                                glShaderSource(this->FragmentProgram, sizeof(FragmenProgramCode_gray) / sizeof (char*), FragmenProgramCode_gray, 0);
-                                        }
-
-                                        glCompileShader(this->FragmentProgram);
-                                        glGetShaderiv(this->FragmentProgram, GL_COMPILE_STATUS, &params);
-
-                                        if(params==GL_TRUE) {
-                                                //std::cout <<"fragment shader source compiled successfully" << std::endl;
-                                        } else {
-                                                LOG_ERROR("Visualization", "Fragment shader source compile error");
-                                                // include null terminator
-                                                glGetShaderiv(this->FragmentProgram, GL_INFO_LOG_LENGTH, &params);
-                                                if(params>0) {
-                                                        char *buffer=new char[params];
-                                                        glGetShaderInfoLog(this->FragmentProgram, params, 0, buffer);
-                                                        LOG_ERROR("Visualization", buffer);
-                                                        delete[] buffer;
-                                                } else {
-                                                        LOG_ERROR("Visualization", "No error information available");
-                                                }
-                                        }
-
-                                        glAttachShader(this->ProgramObject, this->VertexProgram);
-                                        glAttachShader(this->ProgramObject, this->FragmentProgram);
-                                        glLinkProgram(this->ProgramObject);
-
-                                        GLint linked;
-                                        glGetProgramiv(this->ProgramObject, GL_LINK_STATUS, &linked);
-                                        if (linked) {
-                                                //std::cout << "GPU Program enlazado" << std::endl;
-                                        }
-                                        glDisable(GL_FRAGMENT_PROGRAM_ARB);
-                                }
-
-                        }//END PROGRAM SHADER
 
                         //UPLOAD TEXTURE...
                         if(this->SupportsPBO) {
@@ -1064,9 +956,16 @@ void vtkGinkgoOpenGLTexture::Load(vtkRenderer *ren)
                                 //std::cout << "<< UpdateText(slow)" << std::endl;
 
                         }
-#ifndef GL_VERSION_1_1
-                        glEndList ();
-#endif
+
+                        // Grey images are stored as RED (or RED+GREEN for grey+alpha)
+                        // since core profiles have no LUMINANCE formats. Swizzle them
+                        // back so anything sampling this texture (the magnifier too)
+                        // still sees grey.
+                        if (TexFormat == GL_RED || TexFormat == GL_RG) {
+                                const GLint swizzle[4] = { GL_RED, GL_RED, GL_RED, (TexFormat == GL_RG) ? GL_GREEN : GL_ONE };
+                                glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle);
+                        }
+
                         // modify the load time to the current time
                         this->LoadTime.Modified();
 
@@ -1097,196 +996,142 @@ void vtkGinkgoOpenGLTexture::Load(vtkRenderer *ren)
                                         LOG_ERROR("OpenGLComponent", "LUT Not found. Bad initiallization");
                                 }
 
-                                //glEnable(GL_TEXTURE_1D);
-#if defined(_WINDOWS) || defined(__WXGTK__)
-                                glActiveTextureARB(GL_TEXTURE1_ARB);
-#else
-                                glActiveTexture(GL_TEXTURE1_ARB);
-#endif
-                                glGenTextures(1, &this->LUTIndex);
+                                // Draw() binds it to its own texture unit
+                                if (this->LUTIndex == 0) {
+                                        glGenTextures(1, &this->LUTIndex);
+                                }
                                 glBindTexture(GL_TEXTURE_1D, this->LUTIndex);
                                 glTexParameterf( GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
                                 glTexParameterf( GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-                                glTexParameterf( GL_TEXTURE_1D, GL_TEXTURE_WRAP_S,     GL_CLAMP );
-                                glTexParameterf( GL_TEXTURE_1D, GL_TEXTURE_WRAP_T,     GL_CLAMP );
+                                glTexParameterf( GL_TEXTURE_1D, GL_TEXTURE_WRAP_S,     GL_CLAMP_TO_EDGE );
 
-                                glTexImage1D( GL_TEXTURE_1D, 0 , GL_RGBA,
+                                glTexImage1D( GL_TEXTURE_1D, 0 , GL_RGBA8,
                                               lutNvals, 0, GL_RGBA,
                                               GL_UNSIGNED_BYTE, lutData);
-#if defined(_WINDOWS) || defined(__WXGTK__)
-                                glActiveTextureARB(GL_TEXTURE0_ARB);
-#else
-                                glActiveTexture(GL_TEXTURE0_ARB);
-#endif
                         }
                 }
                 LookupTableChanged = false;
         }
 
-        // execute the display list that uses creates the texture
-#ifdef GL_VERSION_1_1
-        glBindTexture(GL_TEXTURE_2D, this->Index);
-#else
-        glCallList(this->Index);
-#endif
-
-        // don't accept fragments if they have zero opacity. this will stop the
-        // zbuffer from be blocked by totally transparent texture fragments.
-        glAlphaFunc (GL_GREATER, static_cast<GLclampf>(0));
-        glEnable (GL_ALPHA_TEST);
-
-        if (this->PremultipliedAlpha) {
-                // save the blend function.
-                glPushAttrib(GL_COLOR_BUFFER_BIT);
-
-                // make the blend function correct for textures premultiplied by alpha.
-                glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-        }
-
-        // now bind it
-        if (this->UseShader) {
-                if (!this->RGBImage) {
-                        glEnable(GL_TEXTURE_1D);
-                }
-        }
-        glEnable(GL_TEXTURE_2D);
-        // clear any texture transform
-        glMatrixMode(GL_TEXTURE);
-        glLoadIdentity();
-
-        // build transformation
-        if (this->Transform) {
-                double *mat = this->Transform->GetMatrix()->Element[0];
-                double mat2[16];
-                mat2[0] = mat[0];
-                mat2[1] = mat[4];
-                mat2[2] = mat[8];
-                mat2[3] = mat[12];
-                mat2[4] = mat[1];
-                mat2[5] = mat[5];
-                mat2[6] = mat[9];
-                mat2[7] = mat[13];
-                mat2[8] = mat[2];
-                mat2[9] = mat[6];
-                mat2[10] = mat[10];
-                mat2[11] = mat[14];
-                mat2[12] = mat[3];
-                mat2[13] = mat[7];
-                mat2[14] = mat[11];
-                mat2[15] = mat[15];
-
-                // insert texture transformation
-                glMultMatrixd(mat2);
-        }
-        glMatrixMode(GL_MODELVIEW);
-
-        if (this->UseShader) {
-                GLint loc = 0;
-
-                glEnable(GL_FRAGMENT_PROGRAM_ARB);
-                glUseProgram(this->ProgramObject);
-
-                // Common parameters for shaders
-
-                // === imageTexture ===
-                loc = glGetUniformLocation(this->ProgramObject,"imagetexture");
-                if(loc != -1) {
-                        glUniform1i(loc, 0);
-                } else {
-                        LOG_ERROR("OpenGLComponent", "error: imagetexture is not a uniform");
-                }
-
-                if (this->RGBImage) { // Parameters for RGB shader
-
-                        // === brightness ===
-                        loc = glGetUniformLocation(this->ProgramObject, "brightness");
-                        if(loc != -1) {
-                                glUniform1f(loc, Brightness);
-                        } else {
-                                LOG_ERROR("OpenGLComponent", "error: brightness is not a uniform");
-                        }
-
-                        // === contrast ===
-                        loc = glGetUniformLocation(this->ProgramObject, "contrast");
-                        if(loc != -1) {
-                                glUniform1f(loc, Contrast);
-                        } else {
-                                LOG_ERROR("OpenGLComponent", "error: contrast is not a uniform");
-                        }
-
-                } else if (LookupTable != NULL) {
-                        // Parameters for LUT shader
-
-                        // === lookupTable ===
-                        loc = glGetUniformLocation(this->ProgramObject,"lookuptable");
-                        if(loc != -1) {
-                                glUniform1i(loc, 1);
-                        } else {
-                                LOG_ERROR("OpenGLComponent", "error: lut is not a uniform");
-                        }
-
-                        double normRange[2] = {0.0, 1.0};
-                        vtkDataArray *scalars = this->GetInputArrayToProcess(0, input);
-                        scalars->GetRange(normRange);
-                        double* drange = LookupTable->GetRange();
-
-                        float range[2] = { static_cast<float>((drange[0]-normRange[0]) / (normRange[1]-normRange[0])),
-                                           static_cast<float>((drange[1]-normRange[0]) / (normRange[1]-normRange[0]))
-                                         };
-
-                        // === shift ===
-                        float shift = -range[0];
-                        loc = glGetUniformLocation(this->ProgramObject,"lutShift");
-                        if(loc != -1) {
-                                glUniform1f(loc, shift);
-                        } else {
-                                LOG_ERROR("OpenGLComponent", "error: shift is not a uniform");
-                        }
-
-                        // === scale ===
-                        float scale = (1.0f)/(range[1] - range[0]);
-                        loc = glGetUniformLocation(this->ProgramObject,"lutScale");
-                        if(loc != -1) {
-                                glUniform1f(loc, scale);
-                        } else {
-                                LOG_ERROR("OpenGLComponent", "error: scale is not a uniform");
-                        }
-                }
-
-                glDisable(GL_FRAGMENT_PROGRAM_ARB);
-        }
 }
 
 // ----------------------------------------------------------------------------
 void vtkGinkgoOpenGLTexture::PostRender(vtkRenderer *vtkNotUsed(ren))
 {
+        // Draw() restores everything it changes
+}
 
-        if (this->UseShader) {
-                glUseProgram(0);
-                /*
+// ----------------------------------------------------------------------------
+void vtkGinkgoOpenGLTexture::Draw(vtkRenderer* ren, vtkPolyData* poly, const float mvp[16], double opacity)
+{
+        GNC::GCS::ILocker lock(this);
 
-                #if defined(_WINDOWS) || defined(__WXGTK__)
-                glActiveTextureARB(GL_TEXTURE1_ARB);
-                #else
-                glActiveTexture(GL_TEXTURE1_ARB);
-                #endif
-
-                glBindTexture(GL_TEXTURE_1D, 0);
-                glDisable(GL_TEXTURE_1D);
-
-                #if defined(_WINDOWS) || defined(__WXGTK__)
-                glActiveTextureARB(GL_TEXTURE0_ARB);
-                #else
-                glActiveTexture(GL_TEXTURE0_ARB);
-                #endif
-
-                glBindTexture(GL_TEXTURE_2D, 0);
-                */
+        vtkOpenGLRenderWindow* renWin = vtkOpenGLRenderWindow::SafeDownCast(ren->GetRenderWindow());
+        vtkPoints* points = poly->GetPoints();
+        vtkDataArray* tcoords = poly->GetPointData()->GetTCoords();
+        if (renWin == NULL || this->Index == 0 || points == NULL || tcoords == NULL) {
+                return;
         }
-        if (this->GetInput() && this->PremultipliedAlpha) {
-                // restore the blend function
-                glPopAttrib();
+
+        // Triangles with position and texture coordinates
+        std::vector<float> vertices;
+        vtkCellArray* polys = poly->GetPolys();
+        vtkIdType npts = 0;
+        const vtkIdType* ids = NULL;
+        for (polys->InitTraversal(); polys->GetNextCell(npts, ids); ) {
+                for (vtkIdType i = 1; i + 1 < npts; ++i) {
+                        const vtkIdType corners[3] = { ids[0], ids[i], ids[i + 1] };
+                        for (int c = 0; c < 3; ++c) {
+                                double p[3];
+                                points->GetPoint(corners[c], p);
+                                double* tc = tcoords->GetTuple(corners[c]);
+                                vertices.push_back(static_cast<float>(p[0]));
+                                vertices.push_back(static_cast<float>(p[1]));
+                                vertices.push_back(static_cast<float>(p[2]));
+                                vertices.push_back(static_cast<float>(tc[0]));
+                                vertices.push_back(static_cast<float>(tc[1]));
+                        }
+                }
         }
+        if (vertices.empty()) {
+                return;
+        }
+
+        // 0: texture as is (colours already mapped on the CPU)
+        // 1: grey value through the lookup table
+        // 2: RGB with brightness and contrast
+        int mode = 0;
+        float lutShift = 0.0f, lutScale = 1.0f;
+        if (this->UseShader && this->RGBImage) {
+                mode = 2;
+        } else if (this->UseShader && this->LookupTable != NULL && this->LUTIndex != 0) {
+                mode = 1;
+                double normRange[2] = {0.0, 1.0};
+                vtkImageData* input = this->GetInput();
+                vtkDataArray* scalars = (input != NULL) ? this->GetInputArrayToProcess(0, input) : NULL;
+                if (scalars != NULL) {
+                        scalars->GetRange(normRange);
+                }
+                const double* drange = this->LookupTable->GetRange();
+                const double span = (normRange[1] - normRange[0]) != 0.0 ? (normRange[1] - normRange[0]) : 1.0;
+                const float range0 = static_cast<float>((drange[0] - normRange[0]) / span);
+                const float range1 = static_cast<float>((drange[1] - normRange[0]) / span);
+                lutShift = -range0;
+                lutScale = (range1 != range0) ? 1.0f / (range1 - range0) : 1.0f;
+        }
+
+        vtkShaderProgram* program = renWin->GetShaderCache()->ReadyShaderProgram(ImageVertexShader, ImageFragmentShader, "");
+        if (program == NULL) {
+                return;
+        }
+
+        vtkTextureUnitManager* units = renWin->GetTextureUnitManager();
+        const int imageUnit = units->Allocate();
+        const int lutUnit = (mode == 1) ? units->Allocate() : -1;
+        vtkOpenGLState* state = renWin->GetState();
+
+        state->vtkglActiveTexture(GL_TEXTURE0 + imageUnit);
+        glBindTexture(GL_TEXTURE_2D, this->Index);
+        if (lutUnit >= 0) {
+                state->vtkglActiveTexture(GL_TEXTURE0 + lutUnit);
+                glBindTexture(GL_TEXTURE_1D, this->LUTIndex);
+        }
+
+        float mvpCopy[16];
+        std::copy(mvp, mvp + 16, mvpCopy);
+        program->SetUniformMatrix4x4("uMVP", mvpCopy);
+        program->SetUniformi("uImage", imageUnit);
+        program->SetUniformi("uLookupTable", (lutUnit >= 0) ? lutUnit : imageUnit);
+        program->SetUniformi("uMode", mode);
+        program->SetUniformf("uLutShift", lutShift);
+        program->SetUniformf("uLutScale", lutScale);
+        program->SetUniformf("uBrightness", this->Brightness);
+        program->SetUniformf("uContrast", this->Contrast);
+        program->SetUniformf("uOpacity", static_cast<float>(opacity));
+
+        // Textures premultiplied by alpha need a matching blend function
+        vtkOpenGLState::ScopedglBlendFuncSeparate blendSaver(state);
+        if (this->PremultipliedAlpha) {
+                state->vtkglBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        }
+
+        if (this->VAO == NULL) {
+                this->VAO = vtkOpenGLVertexArrayObject::New();
+                this->VBO = vtkOpenGLBufferObject::New();
+                this->VBO->SetType(vtkOpenGLBufferObject::ArrayBuffer);
+        }
+        this->VAO->Bind();
+        this->VBO->Upload(vertices, vtkOpenGLBufferObject::ArrayBuffer);
+        const size_t stride = 5 * sizeof(float);
+        this->VAO->AddAttributeArray(program, this->VBO, "aPos", 0, stride, VTK_FLOAT, 3, false);
+        this->VAO->AddAttributeArray(program, this->VBO, "aTex", 3 * sizeof(float), stride, VTK_FLOAT, 2, false);
+        glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(vertices.size() / 5));
+        this->VAO->Release();
+
+        if (lutUnit >= 0) {
+                units->Free(lutUnit);
+        }
+        units->Free(imageUnit);
 }
 
 // ----------------------------------------------------------------------------
