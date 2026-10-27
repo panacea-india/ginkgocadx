@@ -242,10 +242,13 @@ Findings:
 
 Make it practical for other people to build, run and contribute.
 
-- [ ] `CONTRIBUTING.md`
-- [ ] Issue and pull request templates
-- [ ] Updated `AUTHORS` and README
-- [ ] A start on a test suite (CTest), run in the build container
+- [x] `CONTRIBUTING.md`
+- [x] Issue and pull request templates
+- [x] Updated `AUTHORS` and README
+- [x] A start on a test suite: GoogleTest through CTest in `tests/`, run in
+      the build container. 17 tests: geometry, GLDraw's matrix stacks and the
+      TLS client certificate loading. The overlay test was checked to fail
+      with the GL_TEXTURE bug put back.
 - [ ] An AppImage build from the container (CI integration comes with the
       GitHub workflow work)
 

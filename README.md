@@ -44,6 +44,15 @@ parallel compile jobs; with all cores the build can run out of memory.
 On Windows, use a checkout where shell scripts keep LF line endings (the
 included `.gitattributes` takes care of this).
 
+## Tests
+
+The build also compiles the unit tests in `tests/` (GoogleTest, run through
+CTest). They need no display:
+
+```
+docker run --rm -v "$PWD":/src -w /src/build ginkgocadx-build-bookworm ctest --output-on-failure
+```
+
 ## Run
 
 `ci/run.sh` installs the build inside the container and starts the program, so
