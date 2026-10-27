@@ -489,8 +489,8 @@ re-deriving the decisions.
 6. **Phantom series for on-screen checks.** Add `tests/tools/make_phantom.cpp`,
    built only when `BUILD_TESTING` is on and not run by ctest. It writes
    small CT series with DCMTK into a directory given on the command line:
-   - 128×128 pixels, 0.8 mm pixels, 64 slices 2 mm apart, int16, rescale
-     intercept -1024
+   - 128×128 pixels, 0.8 mm pixels, 64 slices 2 mm apart, int16 with
+     BitsStored 12 (see the note below), rescale intercept -1024
    - background -1000 HU, a 60 mm sphere of 40 HU
    - markers that make orientation unambiguous: a 1000 HU rod along the
      patient's left side (+x) only, a 1000 HU cube at the anterior (−y) edge,
@@ -507,6 +507,20 @@ re-deriving the decisions.
 **Done when:** the build is clean, all tests pass (the old 17 plus the new
 ones), the app still opens and displays a series as before, and the phantoms
 import.
+
+**Status: done** (branch `feature-mpr`, 38 tests). Checked on screen: the
+`axial` phantom shows the sphere, the cube at the top and the rod on the
+right in the 2D viewer.
+
+**Finding: the 2D viewer shows 32-bit integer images as black.** The first
+phantom used BitsStored 16 with an intercept of -1024. ITK's GDCM reader
+widens that to a 32-bit int (it can't prove the values fit in 16 bits), and
+the 2D viewer then drew a black image, even with a colour map. The same data
+with BitsStored 12 reads as short and displays fine. Real 16-bit CT series
+with a negative intercept probably hit this too (not checked). It is an
+existing 2D-viewer problem and not part of this track; the volume loader
+handles int correctly (the phantom tests compare every voxel). Keep BitsStored
+at 12 in the phantoms so they display in 2D.
 
 ### F1: orthogonal MPR (the main piece)
 

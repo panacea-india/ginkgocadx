@@ -227,8 +227,8 @@ bool phantom::Write(Variant v, const std::string& dir)
                 ok &= ds->putAndInsertUint16(DCM_Rows, static_cast<Uint16>(g.rows)).good();
                 ok &= ds->putAndInsertUint16(DCM_Columns, static_cast<Uint16>(g.columns)).good();
                 ok &= ds->putAndInsertUint16(DCM_BitsAllocated, 16).good();
-                ok &= ds->putAndInsertUint16(DCM_BitsStored, 16).good();
-                ok &= ds->putAndInsertUint16(DCM_HighBit, 15).good();
+                ok &= ds->putAndInsertUint16(DCM_BitsStored, 12).good();
+                ok &= ds->putAndInsertUint16(DCM_HighBit, 11).good();
                 ok &= ds->putAndInsertUint16(DCM_PixelRepresentation, 1).good();
                 ok &= Put(ds, DCM_RescaleIntercept, "-1024");
                 ok &= Put(ds, DCM_RescaleSlope, "1");
