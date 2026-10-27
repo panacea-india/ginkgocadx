@@ -191,6 +191,8 @@ vtkOpenGLRenderWindow* CurrentWindow = NULL;
 GLenum CurrentMode = GL_MODELVIEW;
 std::vector<Matrix> ModelView(1);
 std::vector<Matrix> Projection(1);
+// Kept so push/pop in GL_TEXTURE mode balance; texture coordinates are not transformed
+std::vector<Matrix> TextureStack(1);
 State Current;
 std::vector<SavedAttributes> AttributeStack;
 
@@ -216,7 +218,10 @@ void ResetState()
 
 std::vector<Matrix>& CurrentStack()
 {
-        return (CurrentMode == GL_PROJECTION) ? Projection : ModelView;
+        if (CurrentMode == GL_PROJECTION) {
+                return Projection;
+        }
+        return (CurrentMode == GL_TEXTURE) ? TextureStack : ModelView;
 }
 
 WindowResources* GetResources()
@@ -515,6 +520,8 @@ void GNC::GCS::GLDraw::BeginFrame(vtkRenderer* ren)
         vtkCamera* cam = ren->GetActiveCamera();
         Projection.assign(1, FromVTK(cam->GetProjectionTransformMatrix(aspect, -1, 1)));
         ModelView.assign(1, FromVTK(cam->GetViewTransformMatrix()));
+        TextureStack.assign(1, Matrix());
+        SetIdentity(TextureStack.back());
 }
 
 void GNC::GCS::GLDraw::EndFrame()
@@ -547,7 +554,7 @@ GNC::GCS::GLDraw::FrameScope::~FrameScope()
 
 void GNC::GCS::GLDraw::MatrixMode(GLenum mode)
 {
-        if (mode == GL_MODELVIEW || mode == GL_PROJECTION) {
+        if (mode == GL_MODELVIEW || mode == GL_PROJECTION || mode == GL_TEXTURE) {
                 CurrentMode = mode;
         }
 }

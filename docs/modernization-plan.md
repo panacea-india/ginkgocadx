@@ -212,8 +212,10 @@ checked on screen).**
       restores VTK's cached state; the `GL_RENDER_MODE` check is gone. No
       fixed-function OpenGL is left outside `GLDraw`.
 - [x] The context check accepts any OpenGL 3.2+ context, core or compatibility
-- [ ] Check on screen: grid, magnifier, brightness/contrast overlay, ECG
-      widgets, corner annotations
+- [x] Checked on screen: corner annotations, colour maps, rotate and flip,
+      metric grid, window/level, markers (ellipse, polygon, free form,
+      trapezoid), text note, pan and zoom
+- [ ] Check on screen: ECG widgets (need an ECG file)
 - [ ] Run once in a core-profile context. wx 3.2.2 can't request one on this X
       server (see findings), so this hasn't been exercised; it is what macOS
       would need.
@@ -231,6 +233,10 @@ Findings:
 - VTK 9 leaves other texture units active; legacy code drawing text as
   textured quads then shows black boxes.
 - Each container starts as a first run, so Ginkgo shows its license dialog.
+- The brightness/contrast tool (Ctrl+B) is registered but no view adds it to
+  its toolbar in this code, so it can't be selected; it would only affect RGB
+  images anyway. The magnifier widget (`wlupa`) isn't used by any tool. Both
+  are the same in 3.8.8.
 - VTK 9 clears to the background colour with alpha 0. Copied to the wx
   canvas, that left earlier frames visible behind the image when panning or
   zooming; `wxVTKRenderWindowInteractor::Render` makes every renderer's
