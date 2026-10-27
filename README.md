@@ -14,12 +14,16 @@ The code builds against Debian 12 (bookworm) libraries: wxWidgets 3.2, ITK 5,
 DCMTK 3.6.7, OpenSSL 3 and VTK 9.1, and needs OpenGL 3.2 or newer. See
 [docs/modernization-plan.md](docs/modernization-plan.md) for the plan.
 
-Changes in this branch on top of Ginkgo CADx 3.8.8:
+Changes compared with Ginkgo CADx 3.8.8:
 
+- Builds on current libraries (see Status) in a Docker container.
+- Image display and the measurement and annotation tools draw with modern
+  OpenGL (shaders) instead of fixed-function OpenGL.
+- DICOM TLS client certificates are actually used; before, they were silently
+  ignored.
 - Multiple selections for downloading, and the download button is enabled when
   more than one item is selected.
 - One date style (Y-m-d).
-- An `AppImageBuilder.yml` recipe.
 
 ## Build
 
@@ -73,5 +77,6 @@ recipe was written for Debian 11, and its paths are still the original author's
 
 ## Contributing
 
-Bug reports and patches are welcome. There are no tests yet; please check that
-the container build still passes.
+Bug reports and patches are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for
+how to report a bug, build, test and send a change, and
+[AUTHORS](AUTHORS) for who has worked on Ginkgo CADx.

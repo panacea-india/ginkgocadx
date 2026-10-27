@@ -1,7 +1,22 @@
-Current contributors: 
+Ginkgo CADx authors
+===================
 
-Gert Wollny <gw.fossdev@gmail.com>
+Original development:
+  MetaEmotion S.L. (2008-2014)
 
-Original development: 
-MetaEmotion
+Maintainers of the free version:
+  Gert Wollny <gw.fossdev@gmail.com> (2015-2019; Debian packaging, C++11,
+    GTK3, DCMTK 3.6.4)
+  SgAkErRu <sulmpx60@yandex.ru> (2024; multi-select download, Y-m-d dates,
+    AppImage recipe)
+  ayush-bharti <ayush.bharti@gmail.com> (2026-; panacea-india fork, move to
+    current libraries and VTK 9)
 
+Other contributors:
+  Gianfranco Costamagna <costamagnagianfranco@yahoo.it>
+  andy5995 <andy400-dev@yahoo.com>
+  freddii <freddii@users.noreply.github.com>
+  mdvthu <mark@mdvthu.com>
+
+The commit history has the details. To add yourself, include a change to this
+file in your pull request.
