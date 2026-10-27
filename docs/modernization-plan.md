@@ -165,7 +165,7 @@ docker run --rm -v "$PWD":/src \
   ginkgocadx-build-bookworm ci/run.sh build-bookworm
 ```
 
-### Phase 2: VTK 9 port (in progress, branch `phase2-vtk9`)
+### Phase 2: VTK 9 port (done, branch `phase2-vtk9`)
 
 Done in two steps so the application keeps working throughout.
 
@@ -190,8 +190,7 @@ VTK 9.1 package replaces the source-built VTK 6.3.
 - [x] Image display and the ruler, angle and arrow tools work on screen;
       line and label colours re-checked on the ruler after the texture-unit fix
 
-**Step 2: replace the legacy OpenGL drawing (code done; some tools not yet
-checked on screen).**
+**Step 2: replace the legacy OpenGL drawing (done).**
 
 - [x] `GNC::GCS::GLDraw` (`cadxcore/vtk/gldraw.cpp`): the subset of
       fixed-function OpenGL the widgets use (immediate mode, matrix stack,
@@ -215,10 +214,7 @@ checked on screen).**
 - [x] Checked on screen: corner annotations, colour maps, rotate and flip,
       metric grid, window/level, markers (ellipse, polygon, free form,
       trapezoid), text note, pan and zoom
-- [ ] Check on screen: ECG widgets (need an ECG file)
-- [ ] Run once in a core-profile context. wx 3.2.2 can't request one on this X
-      server (see findings), so this hasn't been exercised; it is what macOS
-      would need.
+- ECG widgets and a core-profile run are under [Later](#later).
 
 Findings:
 
@@ -242,7 +238,43 @@ Findings:
   zooming; `wxVTKRenderWindowInteractor::Render` makes every renderer's
   background opaque.
 
-### Phase 3: open the doors
+### Phase 3: open the doors (in progress, branch `phase3-open-doors`)
 
-`CONTRIBUTING.md`, templates, updated `AUTHORS` and README, a start on a test
-suite, and an AppImage or Flatpak build in CI.
+Make it practical for other people to build, run and contribute.
+
+- [ ] `CONTRIBUTING.md`
+- [ ] Issue and pull request templates
+- [ ] Updated `AUTHORS` and README
+- [ ] A start on a test suite (CTest), run in the build container
+- [ ] An AppImage build from the container (CI integration comes with the
+      GitHub workflow work)
+
+## Later
+
+Known issues that aren't pressing. Pick them up when they get in someone's
+way.
+
+- **wxWidgets sizer flags.** The GUI code passes flag combinations wx 3.2
+  rejects. Release builds hide the assertions
+  (`wxDISABLE_ASSERTS_IN_RELEASE_BUILD`), but the flags are still wrong and
+  debug builds stop on them.
+- **TLS client certificates** (`GTLSTransportLayer`) have never been tested
+  against a real TLS-enabled PACS.
+- **Exit after copying debug logs.** Seen once in Phase 1 (log level Debug,
+  then copying from the log window); not reproduced since.
+- **Core-profile OpenGL.** The drawing code no longer needs a compatibility
+  profile, but it has only ever run in one. Running in a core profile is what
+  macOS would need.
+- **High-DPI screens.** `wxVTKRenderWindowInteractor` sizes the GL surface in
+  logical pixels, which will probably look wrong with display scaling.
+- **ECG widgets** (`visualizator/widgets/wecg*.cpp`) haven't been checked on
+  screen since the drawing changes; that needs an ECG file.
+- **Unreachable tools.** The brightness/contrast tool and the magnifier
+  (`wlupa`) exist but no view offers them. Wire them up or remove them.
+- **GTK3 cosmetics.** The grid configuration dialog's spin boxes are too small
+  (GtkSpinButton warnings); some menu items warn about image menu items.
+- **Spanish identifiers and comments.** Much of the code is named in Spanish.
+  Renaming would help new contributors but is a large change; best done file
+  by file alongside other work.
+- **GitHub workflow.** `.github/workflows/build.yml` builds on every push but
+  hasn't been checked since the move to Debian 12 and VTK 9.
