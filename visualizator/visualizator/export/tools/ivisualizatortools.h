@@ -24,5 +24,5 @@
 
 #define HGNKVisualizator_MapaColor            4001
 #define HGNKVisualizator_Overlays             4002
-#define HGNKVisualizator_Reconstruction       4003
+// 4003 was the removed reconstruction tool; don't reuse it
 #define HGNKVisualizator_ECGRule		      4004

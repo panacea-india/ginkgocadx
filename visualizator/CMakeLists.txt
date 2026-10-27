@@ -19,11 +19,6 @@ AUX_SOURCE_DIRECTORY(visualizator/export/contracts SRCS)
 AUX_SOURCE_DIRECTORY(visualizator/export/tools SRCS)
 AUX_SOURCE_DIRECTORY(visualizator/tools SRCS)
 AUX_SOURCE_DIRECTORY(visualizator/wxvtk SRCS)
-AUX_SOURCE_DIRECTORY(visualizator/wxvtk/reconstruction SRCS)
-AUX_SOURCE_DIRECTORY(visualizator/wxvtk/reconstruction/commands SRCS)
-AUX_SOURCE_DIRECTORY(visualizator/wxvtk/reconstruction/interactors SRCS)
-AUX_SOURCE_DIRECTORY(visualizator/wxvtk/reconstruction/pipelines SRCS)
-AUX_SOURCE_DIRECTORY(visualizator/wxvtk/reconstruction/volumedataset SRCS)
 AUX_SOURCE_DIRECTORY(resources SRCS)
 
 ################ DEFINITIONS ################

@@ -76,7 +76,7 @@ ENDIF()
 IF(NOT USE_CUSTOM_VTK)
   FIND_PACKAGE(VTK 9.0 REQUIRED COMPONENTS
     CommonCore CommonDataModel CommonExecutionModel CommonMath CommonSystem
-    CommonTransforms FiltersSources ImagingColor ImagingCore ImagingMath IOImage
+    CommonTransforms FiltersSources ImagingColor ImagingCore ImagingMath IOImage IOGeometry FiltersCore RenderingImage RenderingAnnotation RenderingFreeType
     InteractionStyle RenderingCore RenderingOpenGL2 RenderingUI RenderingVolume
     RenderingVolumeOpenGL2)
 ELSE()

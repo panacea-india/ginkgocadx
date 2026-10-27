@@ -639,11 +639,6 @@ GVistaCompleja::~GVistaCompleja()
         GNC::GCS::IEntorno::Instance()->FreeWidgetsManager(m_pManager);
         m_pManager = NULL;
 
-        /*TODO	GNKVisualizator::IReconstructionTool* hReconstruction = GNC::GCS::IEntorno::Instance()->GetControladorHerramientas()->ObtenerHerramientaConcreta<GNKVisualizator::IReconstructionTool>(GNKVisualizator::IReconstructionTool::ID);
-        	if (hReconstruction != NULL) {
-        		((GNC::GCS::IContratable<GNKVisualizator::IReconstructionContract>*)hReconstruction)->DesSubscribirsLosDeLaVista(IVista);
-        	}*/
-
         if (IVista != NULL) {
                 IVista->Lock();
                 delete IVista;

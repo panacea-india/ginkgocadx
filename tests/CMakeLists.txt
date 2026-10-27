@@ -18,6 +18,7 @@ INCLUDE_DIRECTORIES(${wxWidgets_INCLUDE_DIRS})
 add_executable(ginkgo_tests
   test_geometry.cpp
   test_gldraw.cpp
+  test_seriesgeometry.cpp
   test_tlslayer.cpp
 )
 
