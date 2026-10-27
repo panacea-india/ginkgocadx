@@ -108,6 +108,14 @@ IF(LINUX)
 	CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib/ginkgocadx")
 
 	INSTALL(TARGETS ${PROJECT_NAME} DESTINATION bin)
+
+	# Desktop integration (menus, file managers, AppImage)
+	INSTALL(FILES ginkgocadx.desktop DESTINATION share/applications)
+	SET(LOGOS ${CMAKE_SOURCE_DIR}/cadxcore/resources/files/logos)
+	INSTALL(FILES ${LOGOS}/ico_ginkgo16x16.png DESTINATION share/icons/hicolor/16x16/apps RENAME ginkgocadx.png)
+	INSTALL(FILES ${LOGOS}/ico_ginkgo32x32.png DESTINATION share/icons/hicolor/32x32/apps RENAME ginkgocadx.png)
+	INSTALL(FILES ${LOGOS}/ginkgo48x48.png DESTINATION share/icons/hicolor/48x48/apps RENAME ginkgocadx.png)
+	INSTALL(FILES ginkgocadx.1 DESTINATION share/man/man1)
 ENDIF()
 
 IF (MACOS)
