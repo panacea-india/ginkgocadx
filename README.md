@@ -74,15 +74,26 @@ Install them and run `ci/build.sh` from the repository root.
 
 ## AppImage
 
-`AppImageBuilder.yml` builds an AppImage from an installed Debian package. The
-recipe was written for Debian 11, and its paths are still the original author's
-(`/home/user/GinkgoAppImage`). Adjust them before use.
+`ci/appimage.sh` packages a build as an AppImage, in the same container
+(after `ci/build.sh`):
 
-1. Build the Debian package from this branch (apply it as a patch on top of
-   `apt source ginkgocadx`) and unpack its `data.tar.xz` into
-   `GinkgoAppImage/AppDir`.
-2. Install [appimage-builder](https://appimage-builder.readthedocs.io/en/latest/intro/install.html).
-3. Run `appimage-builder` in the `GinkgoAppImage` directory.
+```
+docker run --rm -v "$PWD":/src ginkgocadx-build-bookworm sh -c \
+  'apt-get update && apt-get install -y wget file libglib2.0-bin && ci/appimage.sh'
+```
+
+It writes `dist/Ginkgo_CADx-x86_64.AppImage`. The script downloads pinned
+versions of [linuxdeploy](https://github.com/linuxdeploy/linuxdeploy) and its
+GTK plugin and checks their SHA-256 before running them.
+
+The AppImage runs on x86_64 Linux with glibc 2.36 or newer (Debian 12, Ubuntu
+22.10 and later). Like any OpenGL application it uses the system's graphics
+driver, so it needs the OpenGL libraries a desktop normally has (on Debian and
+Ubuntu: `libgl1`, `libopengl0`, `libegl1`). It was checked on Ubuntu 24.04.
+Without FUSE, run it with `APPIMAGE_EXTRACT_AND_RUN=1`.
+
+`AppImageBuilder.yml` is the earlier recipe, which packaged an installed
+Debian 11 package; `ci/appimage.sh` replaces it.
 
 ## Contributing
 

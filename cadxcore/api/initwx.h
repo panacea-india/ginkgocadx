@@ -51,6 +51,13 @@ class GinkgoEventsDelegate;
 class EXTAPI Ginkgo : public wxApp
 {
 public:
+        // Resources are found under <prefix>/share/<app name>. wx would derive
+        // the name from the executable, which is "AppRun" inside an AppImage.
+        Ginkgo()
+        {
+                SetAppName(wxT("ginkgocadx"));
+        }
+
         wxSplashScreen* GetLogoWindow();
 
         virtual bool OnInit();

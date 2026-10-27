@@ -238,7 +238,7 @@ Findings:
   zooming; `wxVTKRenderWindowInteractor::Render` makes every renderer's
   background opaque.
 
-### Phase 3: open the doors (in progress, branch `phase3-open-doors`)
+### Phase 3: open the doors (done, branch `phase3-open-doors`)
 
 Make it practical for other people to build, run and contribute.
 
@@ -249,8 +249,22 @@ Make it practical for other people to build, run and contribute.
       the build container. 17 tests: geometry, GLDraw's matrix stacks and the
       TLS client certificate loading. The overlay test was checked to fail
       with the GL_TEXTURE bug put back.
-- [ ] An AppImage build from the container (CI integration comes with the
-      GitHub workflow work)
+- [x] An AppImage build from the container: `ci/appimage.sh` with pinned,
+      checksum-verified linuxdeploy. Checked on a clean Ubuntu 24.04 (opens
+      and displays a DICOM file). CI integration comes with the GitHub workflow
+      work.
+
+Findings:
+
+- wx derives the application name, and with it the resources directory
+  (`<prefix>/share/<name>`), from the executable name, which is `AppRun`
+  inside an AppImage. `Ginkgo`'s constructor now sets it to `ginkgocadx`.
+- Debian's DCMTK reads its data dictionary from `/usr/share/libdcmtk17`. The
+  AppImage bundles `dicom.dic` and `private.dic` and sets `DCMDICTPATH` in an
+  AppRun hook; without them the Modality tag isn't decoded and images don't
+  open.
+- VTK 9 links the GLVND `libOpenGL.so.0`, which linuxdeploy leaves to the
+  host (like all OpenGL libraries). Minimal systems need `libopengl0`.
 
 ## Later
 
